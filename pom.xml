@@ -10,10 +10,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>io.u2ware</groupId>
-	<artifactId>common.oauth2</artifactId>
+	<artifactId>u2ware-common-oauth2</artifactId>
 	<version>3.4.11</version>
-	<name>io.u2ware.common.oauth2</name>
-	<description>io.u2ware.common.oauth2</description>
+	<name>u2ware-common-oauth2</name>
+	<description>u2ware-common-oauth2</description>
 	<url/>
 	<licenses>
 		<license/>
@@ -37,6 +37,7 @@
 
 	<properties>
 		<java.version>17</java.version>
+		<u2ware.version>3.4.11</u2ware.version>
 	</properties>
 
 	<dependencies>
