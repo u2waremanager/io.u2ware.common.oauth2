@@ -16,6 +16,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -103,6 +104,32 @@ public class AuthorizationEndpoints {
             return ResponseEntity.status(HttpStatusCode.valueOf(404)).build();
         }
     }
+
+
+    @PostMapping(value = "/oauth2/login", params = { "provider"})
+    public @ResponseBody ResponseEntity<Object> oauth2Login(HttpServletRequest request,
+            @RequestParam("provider") String provider) {
+
+        if(JoseEncryptor.unavailable()){
+            return ResponseEntity.status(HttpStatusCode.valueOf(404)).build();
+        }
+
+        try{
+            Jwt jwt = JoseEncryptor.getInstance().encrypt((claims)->{
+                claims.put("sub", provider);
+                claims.put("email", provider);
+                claims.put("name", provider);
+            });    
+            String idToken = jwt.getTokenValue();            
+            return ResponseEntity.ok(idToken);//.status(HttpStatus.OK).c.headers(headers).build();
+
+        }catch(Exception e){
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatusCode.valueOf(404)).build();
+        }
+    }
+
+
 
     @GetMapping(value = "/oauth2/login", params = { "provider", "callback" })
     public @ResponseBody ResponseEntity<Object> oauth2Login(HttpServletRequest request,
