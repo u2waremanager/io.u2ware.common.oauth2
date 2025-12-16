@@ -27,7 +27,7 @@ public class AuthenticationContext {
         if(converter == null) {
             converter = new JwtGrantedAuthoritiesConverter();
             converter.setAuthoritiesClaimName("authorities");
-            converter.setAuthorityPrefix("ROLE_");
+            converter.setAuthorityPrefix("");
         } 
         return converter;
     }

@@ -1,5 +1,7 @@
 package io.u2ware.common.oauth2.crypto;
 
+import java.security.KeyPair;
+import java.security.interfaces.RSAPublicKey;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -26,15 +28,17 @@ import com.nimbusds.jose.proc.SecurityContext;
 import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
 import com.nimbusds.jwt.proc.DefaultJWTProcessor;
 
+public class JoseKeyCodec {
 
-public class JoseEncryptor {
-
+    private JWK jwk;
     private NimbusJwtEncoder encoder;
     private NimbusJwtDecoder decoder;
 
-    public JoseEncryptor(JWK jwk) {
+    public JoseKeyCodec(JWK jwk) {
+        this.jwk = jwk;
         JWKSet jwkSet = new JWKSet(jwk);
         JWKSource<SecurityContext> jwkSource = (jwkSelector, securityContext) -> jwkSelector.select(jwkSet);
+        // JWKSource<SecurityContext> jwkSource = new ImmutableJWKSet<>(jwkSet);
 
         Set<JWSAlgorithm> jwsAlgs = new HashSet<>();
         jwsAlgs.addAll(JWSAlgorithm.Family.RSA);
@@ -50,7 +54,15 @@ public class JoseEncryptor {
 
         this.encoder = new NimbusJwtEncoder(jwkSource);
         this.decoder = new NimbusJwtDecoder(jwtProcessor);
+    }
 
+    public JoseKeyCodec(NimbusJwtDecoder decoder, NimbusJwtEncoder encoder) {
+        this.decoder = decoder;
+        this.encoder = encoder;
+    }
+
+    public JWK jwk() {
+        return jwk;
     }
 
     public JwtEncoder encoder() {
@@ -61,12 +73,6 @@ public class JoseEncryptor {
         return decoder;
     }
 
-
-
-    public JoseEncryptor(NimbusJwtDecoder decoder, NimbusJwtEncoder encoder) {
-        this.decoder = decoder;
-        this.encoder = encoder;
-    }
 
     public Jwt encrypt(Consumer<Map<String, Object>> claimsConsumer) throws Exception {
         JwsHeader jwsHeader = JwsHeader.with(SignatureAlgorithm.RS256).build();
@@ -82,22 +88,4 @@ public class JoseEncryptor {
         }
         return decoder.decode(token);
     }
-
-    //////////////////////////
-    //
-    //////////////////////////
-    private static JoseEncryptor instance;
-   
-    public static JoseEncryptor getInstance() throws Exception{
-        if(instance == null) {
-            instance = new JoseEncryptor(JoseKeyGenerator.generateRsa());
-        }
-        return instance;
-    }
-
-    public static Boolean unavailable() {
-        return instance == null;
-    }
-
-
 }

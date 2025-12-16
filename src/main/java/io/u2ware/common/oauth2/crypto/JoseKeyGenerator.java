@@ -11,36 +11,10 @@ import javax.crypto.SecretKey;
 
 import com.nimbusds.jose.jwk.Curve;
 import com.nimbusds.jose.jwk.ECKey;
-import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.OctetSequenceKey;
 import com.nimbusds.jose.jwk.RSAKey;
 
 public class JoseKeyGenerator {
-
-    public static JWK generateRsa() {
-        KeyPair keyPair = CryptoKeyGenerator.generateRsa();
-        RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
-        RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
-        // @formatter:off
-        return new RSAKey.Builder(publicKey)
-                .privateKey(privateKey)
-                .keyID(UUID.randomUUID().toString())
-                .build();
-        // @formatter:on
-    }
-
-    public static JWK generateEc() {
-        KeyPair keyPair = CryptoKeyGenerator.generateEc();
-        ECPublicKey publicKey = (ECPublicKey) keyPair.getPublic();
-        ECPrivateKey privateKey = (ECPrivateKey) keyPair.getPrivate();
-        Curve curve = Curve.forECParameterSpec(publicKey.getParams());
-        // @formatter:off
-        return new ECKey.Builder(curve, publicKey)
-                .privateKey(privateKey)
-                .keyID(UUID.randomUUID().toString())
-                .build();
-        // @formatter:on
-    }
 
     public static OctetSequenceKey generateSha() {
         SecretKey secretKey = CryptoKeyGenerator.generateSha();
@@ -59,5 +33,58 @@ public class JoseKeyGenerator {
                 .build();
         // @formatter:on
     }    
+
+
+    public static RSAKey generateRsa() {
+        return generateRsa(CryptoKeyGenerator.generateRsa());
+    }
+
+    public static RSAKey generateRsa(KeyPair keyPair) {
+        RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
+        RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
+        // @formatter:off
+        return new RSAKey.Builder(publicKey)
+                .privateKey(privateKey)
+                .keyID(UUID.randomUUID().toString())
+                .build();
+        // @formatter:on
+    }
+
+    public static RSAKey generateRsa(RSAPublicKey publicKey) {
+        // @formatter:off
+        return new RSAKey.Builder(publicKey)
+                .build();
+        // @formatter:on
+    }
+    public static RSAKey generateRsa(RSAPublicKey publicKey, RSAPrivateKey privateKey) {
+        // @formatter:off
+        return new RSAKey.Builder(publicKey)
+                .privateKey(privateKey)
+                .build();
+        // @formatter:on
+    }
+
+
+
+
+
+
+
+
+
+    public static ECKey generateEc() {
+        KeyPair keyPair = CryptoKeyGenerator.generateEc();
+        ECPublicKey publicKey = (ECPublicKey) keyPair.getPublic();
+        ECPrivateKey privateKey = (ECPrivateKey) keyPair.getPrivate();
+        Curve curve = Curve.forECParameterSpec(publicKey.getParams());
+        // @formatter:off
+        return new ECKey.Builder(curve, publicKey)
+                .privateKey(privateKey)
+                .keyID(UUID.randomUUID().toString())
+                .build();
+        // @formatter:on
+    }
+
+
 
 }

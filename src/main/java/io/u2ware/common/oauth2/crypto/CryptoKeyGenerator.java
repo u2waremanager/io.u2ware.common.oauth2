@@ -10,6 +10,7 @@ import java.security.spec.EllipticCurve;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 
 /**
  * 
@@ -47,18 +48,29 @@ public class CryptoKeyGenerator {
         return hmacKey;
     }
 
+
     //Symmetric Key Encryption
-    public static SecretKey generateAes() {
-        SecretKey aesKey;
+    public static SecretKeySpec generateAes() {
+        SecretKeySpec aesKey;
         try {
             KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
             keyGenerator.init(128);
-            aesKey = keyGenerator.generateKey();
+            SecretKey aes = keyGenerator.generateKey();
+            aesKey = new SecretKeySpec(aes.getEncoded(), "AES");
         } catch (Exception ex) {
             throw new IllegalStateException(ex);
         }
         return aesKey;
     }
+
+
+
+
+
+
+
+
+
 
 
     //Asymmetric Key Encryption Or Public Key Algorithm
