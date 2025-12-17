@@ -1,7 +1,5 @@
 package io.u2ware.common.oauth2.crypto;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.interfaces.RSAPrivateKey;

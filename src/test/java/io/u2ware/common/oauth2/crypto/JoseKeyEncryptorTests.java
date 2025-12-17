@@ -2,9 +2,6 @@ package io.u2ware.common.oauth2.crypto;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.security.interfaces.RSAPublicKey;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -12,7 +9,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 
 import com.nimbusds.jose.jwk.RSAKey;
 
