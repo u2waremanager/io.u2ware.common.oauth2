@@ -2,6 +2,7 @@ package io.u2ware.common.oauth2.jwt;
 
 import java.nio.file.Path;
 import java.security.interfaces.RSAPublicKey;
+import java.util.Arrays;
 import java.util.stream.IntStream;
 
 import org.springframework.boot.autoconfigure.security.oauth2.resource.OAuth2ResourceServerProperties;
@@ -19,6 +20,9 @@ import io.u2ware.common.oauth2.crypto.JoseKeyGenerator;
 
 public class JwtDecoderBuilder {
     
+
+    private RSAKey joseRsaKey;
+
     public JwtDecoder build(OAuth2ResourceServerProperties properties) {
 
         try{
@@ -38,12 +42,12 @@ public class JwtDecoderBuilder {
             }
 
             // logger.info("NimbusJwtDecoder by new RSA Key");
-            RSAKey rsaKey = JoseKeyGenerator.generateRsa();
+            joseRsaKey = JoseKeyGenerator.generateRsa();
             System.err.println("\n");
             IntStream.range(1, 6).forEach(i->{
 
                 String name = "test_account_0"+i;
-                Jwt jwt = JoseKeyEncryptor.encrypt(rsaKey, claims->{
+                Jwt jwt = JoseKeyEncryptor.encrypt(joseRsaKey, claims->{
                     claims.put("sub", name);
                     claims.put("email", name);
                     claims.put("name", name);
@@ -52,12 +56,36 @@ public class JwtDecoderBuilder {
             });
             System.err.println("\n");
 
-            RSAPublicKey publicKey = rsaKey.toRSAPublicKey();
+            RSAPublicKey publicKey = joseRsaKey.toRSAPublicKey();
             return NimbusJwtDecoder.withPublicKey(publicKey).build();
 
         }catch(Exception e){
             throw new RuntimeException(e);
         }
+    }
+
+    public RSAKey getJoseRsaKey(){
+        return joseRsaKey;
+    }
+
+    public Jwt jose(String username, String... authorities) {
+
+        try{
+            return JoseKeyEncryptor.encrypt(joseRsaKey, claims->{
+
+                claims.put("sub", username);
+                claims.put("email", username);
+                claims.put("name", username);
+                claims.put("hello", "jose");
+                if(! ObjectUtils.isEmpty(authorities)){
+                    claims.put("authorities", Arrays.asList(authorities));
+                }
+            });
+    
+        }catch(Exception e){
+            return null;
+        }
+
     }
 
 
