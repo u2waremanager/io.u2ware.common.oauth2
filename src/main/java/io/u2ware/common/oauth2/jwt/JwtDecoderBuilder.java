@@ -8,7 +8,6 @@ import org.springframework.boot.autoconfigure.security.oauth2.resource.OAuth2Res
 import org.springframework.core.io.Resource;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.util.ObjectUtils;
 
@@ -38,9 +37,8 @@ public class JwtDecoderBuilder {
                 return NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
             }
 
+            // logger.info("NimbusJwtDecoder by new RSA Key");
             RSAKey rsaKey = JoseKeyGenerator.generateRsa();
-            
-            
             System.err.println("\n");
             IntStream.range(1, 6).forEach(i->{
 
