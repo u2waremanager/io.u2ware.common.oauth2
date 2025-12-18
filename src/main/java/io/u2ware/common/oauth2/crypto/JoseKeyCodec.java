@@ -1,7 +1,5 @@
 package io.u2ware.common.oauth2.crypto;
 
-import java.security.KeyPair;
-import java.security.interfaces.RSAPublicKey;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
