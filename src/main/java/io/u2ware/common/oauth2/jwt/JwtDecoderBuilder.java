@@ -52,9 +52,9 @@ public class JwtDecoderBuilder {
                     claims.put("email", name);
                     claims.put("name", name);
                 });
-                System.err.println("#VITE_API_TOKEN="+jwt.getTokenValue());
+                System.err.println(jwt.getTokenValue());
+                System.err.println("\n");
             });
-            System.err.println("\n");
 
             RSAPublicKey publicKey = joseRsaKey.toRSAPublicKey();
             return NimbusJwtDecoder.withPublicKey(publicKey).build();

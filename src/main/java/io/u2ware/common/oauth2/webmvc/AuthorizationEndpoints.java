@@ -1,6 +1,11 @@
 package io.u2ware.common.oauth2.webmvc;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
@@ -25,8 +30,15 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.u2ware.common.oauth2.crypto.JoseKeyCodec;
+import io.u2ware.common.oauth2.jwt.AuthenticationContext;
 import jakarta.servlet.http.HttpServletRequest;
+
+/**
+ * 
+ * Not Used !!!!!
+ * 
+ * 
+ */
 
 @Configuration
 @Controller

@@ -1,5 +1,6 @@
-package io.u2ware.common.oauth2.webmvc;
+package io.u2ware.common.oauth2.jwt;
 
+import java.security.Principal;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -34,12 +35,13 @@ public class AuthenticationContext {
 
     private AuthenticationContext(){}
 
-    public static Jwt authenticationToken(Authentication authentication) {
+    public static Jwt authenticationToken(Principal authentication) {
         if(authentication instanceof JwtAuthenticationToken jwtAuthenticationToken) {
             return jwtAuthenticationToken.getToken();
         } 
         return null;
     }
+
 
     @SuppressWarnings("unchecked")
     public static Collection<GrantedAuthority> authorities(Authentication authentication) {
