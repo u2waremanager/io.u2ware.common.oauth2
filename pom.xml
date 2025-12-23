@@ -10,7 +10,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>io.u2ware</groupId>
-	<artifactId>common.oauth2</artifactId>
+	<artifactId>u2ware-common-oauth2</artifactId>
 	<version>3.4.11</version>
 	<name>u2ware-common-oauth2</name>
 	<description>u2ware-common-oauth2</description>
