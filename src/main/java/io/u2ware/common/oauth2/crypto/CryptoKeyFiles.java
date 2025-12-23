@@ -57,7 +57,6 @@ public class CryptoKeyFiles {
 
 
 
-    @SuppressWarnings("null")
     public static RSAPublicKey readRSAPublicKey(Path path) throws Exception{
         byte[] bytes = Files.readAllBytes(path);
         return rsaPublicKeyConverter.convert(bytes);

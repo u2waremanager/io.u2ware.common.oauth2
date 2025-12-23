@@ -2,7 +2,6 @@ package io.u2ware.common.oauth2.crypto;
 
 import java.security.KeyPair;
 
-import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.apache.commons.logging.Log;
