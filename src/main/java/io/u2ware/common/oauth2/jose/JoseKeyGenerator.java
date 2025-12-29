@@ -1,4 +1,4 @@
-package io.u2ware.common.oauth2.crypto;
+package io.u2ware.common.oauth2.jose;
 
 import java.security.KeyPair;
 import java.security.interfaces.ECPrivateKey;
@@ -13,6 +13,8 @@ import com.nimbusds.jose.jwk.Curve;
 import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.jwk.OctetSequenceKey;
 import com.nimbusds.jose.jwk.RSAKey;
+
+import io.u2ware.common.oauth2.crypto.CryptoKeyGenerator;
 
 public class JoseKeyGenerator {
 

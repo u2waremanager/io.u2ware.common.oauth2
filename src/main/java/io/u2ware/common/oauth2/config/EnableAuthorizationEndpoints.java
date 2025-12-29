@@ -9,13 +9,13 @@ import java.lang.annotation.Target;
 
 import org.springframework.context.annotation.Import;
 
-import io.u2ware.common.oauth2.webmvc.AuthorizationEndpoints;
+import io.u2ware.common.oauth2.jwt.JwtEndpoints;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
-@Import({AuthorizationEndpoints.class})
+@Import({JwtEndpoints.class})
 public @interface EnableAuthorizationEndpoints {
 
 

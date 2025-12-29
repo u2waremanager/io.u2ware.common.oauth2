@@ -1,4 +1,4 @@
-package io.u2ware.common.oauth2.crypto;
+package io.u2ware.common.oauth2.jose;
 
 import java.nio.file.Files;
 import java.nio.file.Path;

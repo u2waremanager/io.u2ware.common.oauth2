@@ -1,4 +1,4 @@
-package io.u2ware.common.oauth2.webmvc;
+package io.u2ware.common.oauth2.jwt;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -30,7 +30,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.u2ware.common.oauth2.jwt.AuthenticationContext;
 import jakarta.servlet.http.HttpServletRequest;
 
 /**
@@ -42,7 +41,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 @Configuration
 @Controller
-public class AuthorizationEndpoints {
+public class JwtEndpoints {
 
     protected Log logger = LogFactory.getLog(getClass());
 
@@ -118,15 +117,19 @@ public class AuthorizationEndpoints {
     }
 
 
-    @PostMapping(value = "/oauth2/login", params = { "provider"})
+    @PostMapping(value = "/oauth2/login", params = { "username"})
     public @ResponseBody ResponseEntity<Object> oauth2Login(HttpServletRequest request,
-            @RequestParam("provider") String provider) {
+            @RequestParam("username") String username) {
 
-        // if(JoseKeyCodec.unavailable()){
+        // if(JwtConfiguration.getInstance().getJoseRsaKey() == null){
         //     return ResponseEntity.status(HttpStatusCode.valueOf(404)).build();
         // }
 
         try{
+            // Jwt jwt = JwtConfiguration.getInstance().jwt(username);
+            // if(jwt == null) {
+            //     return ResponseEntity.status(HttpStatusCode.valueOf(401)).build();
+            // }
             // Jwt jwt = JoseKeyCodec.getInstance().encrypt((claims)->{
             //     claims.put("sub", provider);
             //     claims.put("email", provider);

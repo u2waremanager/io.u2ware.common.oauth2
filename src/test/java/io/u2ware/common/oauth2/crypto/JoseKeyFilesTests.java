@@ -10,8 +10,18 @@ import org.apache.commons.logging.LogFactory;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 
 import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jose.jwk.source.JWKSource;
+import com.nimbusds.jose.proc.SecurityContext;
+
+import io.u2ware.common.oauth2.jose.JWKCodec;
+import io.u2ware.common.oauth2.jose.JoseKeyEncryptor;
+import io.u2ware.common.oauth2.jose.JoseKeyFiles;
+import io.u2ware.common.oauth2.jose.JoseKeyGenerator;
+import io.u2ware.common.oauth2.jwt.JwtConfiguration;
 
 public class JoseKeyFilesTests {
     
@@ -36,8 +46,19 @@ public class JoseKeyFilesTests {
         logger.info(rsaKey1);
         logger.info(rsaKey2);
 
+        JWKSource<SecurityContext> jwkSource1 = JWKCodec.source(rsaKey1);
+        NimbusJwtEncoder encoder1 = JWKCodec.encoder(jwkSource1);
+        NimbusJwtDecoder decoder1 = JWKCodec.decoder(jwkSource1);
 
-        Jwt jwt1 = JoseKeyEncryptor.encrypt(rsaKey1, (claims)->{
+        
+        JWKSource<SecurityContext> jwkSource2 = JWKCodec.source(rsaKey2);
+        NimbusJwtEncoder encoder2 = JWKCodec.encoder(jwkSource2);
+        NimbusJwtDecoder decoder2 = JWKCodec.decoder(jwkSource2);
+
+       
+
+
+        Jwt jwt1 = JoseKeyEncryptor.encrypt(encoder1, (claims)->{
             claims.put("sub", "user1");
             claims.put("email", "user1");
             claims.put("name", "user1");            
@@ -46,7 +67,7 @@ public class JoseKeyFilesTests {
         logger.info(jwt1.getTokenValue());
 
 
-        Jwt jwt2 = JoseKeyEncryptor.decrypt(rsaKey2, () -> jwt1.getTokenValue());
+        Jwt jwt2 = JoseKeyEncryptor.decrypt(decoder2, () -> jwt1.getTokenValue());
         logger.info(jwt2);
         logger.info(jwt2.getTokenValue());
 
@@ -75,8 +96,13 @@ public class JoseKeyFilesTests {
 
         RSAKey rsaKey2 = JoseKeyGenerator.generateRsa(publicKey, privateKey);
 
+        JWKSource<SecurityContext> jwkSource2 = JWKCodec.source(rsaKey2);
+        NimbusJwtEncoder encoder2 = JWKCodec.encoder(jwkSource2);
+        NimbusJwtDecoder decoder2 = JWKCodec.decoder(jwkSource2);
 
-        Jwt jwt1 = JoseKeyEncryptor.encrypt(rsaKey2, (claims)->{
+
+
+        Jwt jwt1 = JoseKeyEncryptor.encrypt(encoder2, (claims)->{
             claims.put("sub", "user1");
             claims.put("email", "user1");
             claims.put("name", "user1");            
@@ -85,7 +111,7 @@ public class JoseKeyFilesTests {
         logger.info(jwt1.getTokenValue());
 
 
-        Jwt jwt2 = JoseKeyEncryptor.decrypt(rsaKey2, () -> jwt1.getTokenValue());
+        Jwt jwt2 = JoseKeyEncryptor.decrypt(decoder2, () -> jwt1.getTokenValue());
         logger.info(jwt2);
         logger.info(jwt2.getTokenValue());
 

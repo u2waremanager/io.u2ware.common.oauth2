@@ -9,6 +9,8 @@ import org.junit.jupiter.api.Test;
 
 import com.nimbusds.jose.jwk.RSAKey;
 
+import io.u2ware.common.oauth2.jose.JoseKeyGenerator;
+
 public class JoseKeyGeneratorTests {
  
     private Log logger = LogFactory.getLog(getClass());
