@@ -16,7 +16,6 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 
-import io.u2ware.common.oauth2.jose.JWKCodec;
 import io.u2ware.common.oauth2.jose.JoseKeyEncryptor;
 import io.u2ware.common.oauth2.jose.JoseKeyGenerator;
 import io.u2ware.common.oauth2.jwt.JwtConfiguration;
@@ -40,9 +39,9 @@ public class JoseKeyEncryptorTests {
 
      
         RSAKey key = JoseKeyGenerator.generateRsa();
-        JWKSource<SecurityContext> jwkSource = JWKCodec.source(key);
-        NimbusJwtEncoder encoder = JWKCodec.encoder(jwkSource);
-        NimbusJwtDecoder decoder = JWKCodec.decoder(jwkSource);
+        JWKSource<SecurityContext> jwkSource = JwtConfiguration.source(key);
+        NimbusJwtEncoder encoder = JwtConfiguration.encoder(jwkSource);
+        NimbusJwtDecoder decoder = JwtConfiguration.decoder(jwkSource);
 
 
         Jwt jwt1 = JoseKeyEncryptor.encrypt(encoder, claims("user1"));
@@ -61,14 +60,14 @@ public class JoseKeyEncryptorTests {
         RSAKey key1 = JoseKeyGenerator.generateRsa();
         RSAKey key2 = JoseKeyGenerator.generateRsa();
 
-        JWKSource<SecurityContext> jwkSource1 = JWKCodec.source(key1);
-        NimbusJwtEncoder encoder1 = JWKCodec.encoder(jwkSource1);
+        JWKSource<SecurityContext> jwkSource1 = JwtConfiguration.source(key1);
+        NimbusJwtEncoder encoder1 = JwtConfiguration.encoder(jwkSource1);
         // NimbusJwtDecoder decoder1 = JoseKeyCodec.decoder(jwkSource1);
 
 
-        JWKSource<SecurityContext> jwkSource2 = JWKCodec.source(key2);
+        JWKSource<SecurityContext> jwkSource2 = JwtConfiguration.source(key2);
         // NimbusJwtEncoder encoder2 = JoseKeyCodec.encoder(jwkSource2);
-        NimbusJwtDecoder decoder2 = JWKCodec.decoder(jwkSource2);
+        NimbusJwtDecoder decoder2 = JwtConfiguration.decoder(jwkSource2);
 
 
         Jwt t1 = JoseKeyEncryptor.encrypt(encoder1, claims("user1"));
@@ -84,6 +83,7 @@ public class JoseKeyEncryptorTests {
             logger.info(e.getMessage());
             assertThat(e).isNotNull();
         }
+
     }
 
 
