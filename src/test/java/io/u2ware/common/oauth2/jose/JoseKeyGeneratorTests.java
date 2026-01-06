@@ -1,4 +1,4 @@
-package io.u2ware.common.oauth2.crypto;
+package io.u2ware.common.oauth2.jose;
 
 import java.security.KeyPair;
 import java.security.interfaces.RSAPublicKey;
@@ -9,7 +9,8 @@ import org.junit.jupiter.api.Test;
 
 import com.nimbusds.jose.jwk.RSAKey;
 
-import io.u2ware.common.oauth2.jose.JoseKeyGenerator;
+import io.u2ware.common.oauth2.crypto.CryptoKeyEncryptor;
+import io.u2ware.common.oauth2.crypto.CryptoKeyGenerator;
 
 public class JoseKeyGeneratorTests {
  

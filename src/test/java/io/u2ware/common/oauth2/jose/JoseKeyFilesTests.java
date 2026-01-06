@@ -1,4 +1,4 @@
-package io.u2ware.common.oauth2.crypto;
+package io.u2ware.common.oauth2.jose;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -17,10 +17,7 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 
-import io.u2ware.common.oauth2.jose.JoseKeyEncryptor;
-import io.u2ware.common.oauth2.jose.JoseKeyFiles;
-import io.u2ware.common.oauth2.jose.JoseKeyGenerator;
-import io.u2ware.common.oauth2.jwt.JwtConfiguration;
+import io.u2ware.common.oauth2.crypto.CryptoKeyFiles;
 
 public class JoseKeyFilesTests {
     
@@ -45,14 +42,14 @@ public class JoseKeyFilesTests {
         logger.info(rsaKey1);
         logger.info(rsaKey2);
 
-        JWKSource<SecurityContext> jwkSource1 = JwtConfiguration.source(rsaKey1);
-        NimbusJwtEncoder encoder1 = JwtConfiguration.encoder(jwkSource1);
-        NimbusJwtDecoder decoder1 = JwtConfiguration.decoder(jwkSource1);
+        JWKSource<SecurityContext> jwkSource1 = JoseKeyCodec.source(rsaKey1);
+        NimbusJwtEncoder encoder1 = JoseKeyCodec.encoder(jwkSource1);
+        NimbusJwtDecoder decoder1 = JoseKeyCodec.decoder(jwkSource1);
 
         
-        JWKSource<SecurityContext> jwkSource2 = JwtConfiguration.source(rsaKey2);
-        NimbusJwtEncoder encoder2 = JwtConfiguration.encoder(jwkSource2);
-        NimbusJwtDecoder decoder2 = JwtConfiguration.decoder(jwkSource2);
+        JWKSource<SecurityContext> jwkSource2 = JoseKeyCodec.source(rsaKey2);
+        NimbusJwtEncoder encoder2 = JoseKeyCodec.encoder(jwkSource2);
+        NimbusJwtDecoder decoder2 = JoseKeyCodec.decoder(jwkSource2);
 
        
 
@@ -95,9 +92,9 @@ public class JoseKeyFilesTests {
 
         RSAKey rsaKey2 = JoseKeyGenerator.generateRsa(publicKey, privateKey);
 
-        JWKSource<SecurityContext> jwkSource2 = JwtConfiguration.source(rsaKey2);
-        NimbusJwtEncoder encoder2 = JwtConfiguration.encoder(jwkSource2);
-        NimbusJwtDecoder decoder2 = JwtConfiguration.decoder(jwkSource2);
+        JWKSource<SecurityContext> jwkSource2 = JoseKeyCodec.source(rsaKey2);
+        NimbusJwtEncoder encoder2 = JoseKeyCodec.encoder(jwkSource2);
+        NimbusJwtDecoder decoder2 = JoseKeyCodec.decoder(jwkSource2);
 
 
 
