@@ -35,7 +35,6 @@ import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -71,10 +70,10 @@ public class OAuth2ResourceServerAdministration {
 
     private OAuth2ResourceServerUserinfoService oauth2UserinfoService;
 
-    // public OAuth2ResourceServerAdministration(SecurityProperties p1, OAuth2ResourceServerProperties p2, Oauth2UserinfoService oauth2UserinfoService) {
-    //     this(p1, p2);
-    //     this.oauth2UserinfoService = oauth2UserinfoService;
-    // }
+    public OAuth2ResourceServerAdministration(SecurityProperties p1, OAuth2ResourceServerProperties p2, OAuth2ResourceServerUserinfoService oauth2UserinfoService) {
+        this(p1, p2);
+        this.oauth2UserinfoService = oauth2UserinfoService;
+    }
 
 
     public OAuth2ResourceServerAdministration(SecurityProperties p1, OAuth2ResourceServerProperties p2) {
