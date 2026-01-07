@@ -15,8 +15,10 @@ import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 public class JoseKeyEncryptor {
     
     public static Jwt encrypt(JwtEncoder encoder, Consumer<Map<String, Object>> claimsConsumer){
-        JwsHeader jwsHeader = JwsHeader.with(SignatureAlgorithm.RS256).build();
+
         JwtClaimsSet claims = JwtClaimsSet.builder().claims(claimsConsumer).build();
+
+        JwsHeader jwsHeader = JwsHeader.with(SignatureAlgorithm.RS256).build();
         JwtEncoderParameters jwtEncoderParameters = JwtEncoderParameters.from(jwsHeader, claims);
         return encoder.encode(jwtEncoderParameters);
     }
