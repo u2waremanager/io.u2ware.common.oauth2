@@ -3,6 +3,7 @@ package io.u2ware.common.oauth2.jwt;
 import java.security.Principal;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashSet;
 
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -108,4 +109,17 @@ public class AuthenticationContext {
         }
         return result; 
     }
+
+    public static String extractHeaderToken(HttpServletRequest request) {
+        Enumeration<String> headers = request.getHeaders("Authorization");
+        while (headers.hasMoreElements()) { // typically there is only one (most servers enforce that)
+            String value = headers.nextElement();
+            if ((value.toLowerCase().startsWith("Bearer".toLowerCase()))) {
+                String authHeaderValue = value.substring("Bearer".length()).trim();
+                return authHeaderValue;
+            }
+        }
+        return null;
+    }
+
 }
