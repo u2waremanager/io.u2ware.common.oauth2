@@ -26,6 +26,8 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
@@ -58,8 +60,9 @@ import jakarta.servlet.http.HttpServletRequest;
 public class OAuth2ResourceServerAdministration {
 
 
-    private SecurityProperties securityProperties;
-    private OAuth2ResourceServerProperties oauth2Properties;
+    private SecurityProperties sp;
+    private OAuth2ResourceServerProperties op;
+    private PasswordEncoder passwordEncoder;
 
     private JWKSource<SecurityContext> jwkSource;
     private JWKSet jwkSet;
@@ -67,21 +70,22 @@ public class OAuth2ResourceServerAdministration {
     private JwtDecoder jwtDecoder;
     private boolean available =false;
 
-    // private OAuth2ResourceServerUserinfoService oauth2UserinfoService;
-
-    // public OAuth2ResourceServerAdministration(SecurityProperties p1, OAuth2ResourceServerProperties p2, OAuth2ResourceServerUserinfoService oauth2UserinfoService) {
-    //     this(p1, p2);
-    //     this.oauth2UserinfoService = oauth2UserinfoService;
-    // }
+    // private UserDetailsService userDetailsService;
+    // private UserDetailsService userDetailsService;
 
 
-    public OAuth2ResourceServerAdministration(SecurityProperties p1, OAuth2ResourceServerProperties p2) {
+    public OAuth2ResourceServerAdministration(SecurityProperties sp, OAuth2ResourceServerProperties op) {
+        this(sp, op, null);
+    }
 
-        this.securityProperties = p1;
-        this.oauth2Properties = p2;
+    public OAuth2ResourceServerAdministration(SecurityProperties sp, OAuth2ResourceServerProperties op, PasswordEncoder passwordEncoder) {
 
-        String username = securityProperties.getUser().getName();
-        String password = securityProperties.getUser().getPassword();
+        this.sp = sp;
+        this.op = op;
+        this.passwordEncoder = passwordEncoder;
+
+        String username = sp.getUser().getName();
+        String password = sp.getUser().getPassword();
         System.err.println("\n");
         System.err.println("\t username: "+username);
         System.err.println("\t password: "+password);
@@ -96,8 +100,8 @@ public class OAuth2ResourceServerAdministration {
             JwtDecoder decoder = JoseKeyCodec.decoder(jwkSource);
             List<JwtDecoder> collection = new ArrayList<>(Arrays.asList(decoder))  ;
 
-            Resource publicKeyLocation = oauth2Properties.getJwt().getPublicKeyLocation();
-            String jwkSetUri = oauth2Properties.getJwt().getJwkSetUri();
+            Resource publicKeyLocation = op.getJwt().getPublicKeyLocation();
+            String jwkSetUri = op.getJwt().getJwkSetUri();
 
             if(! ObjectUtils.isEmpty(publicKeyLocation)) {
                 Path path = Path.of(publicKeyLocation.getURI());
@@ -110,6 +114,7 @@ public class OAuth2ResourceServerAdministration {
                 this.available = true; 
             }
             this.jwtDecoder = new JwtCompositeDecoder(collection);
+
 
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -136,6 +141,11 @@ public class OAuth2ResourceServerAdministration {
             throw new RuntimeException("JwtCompositeDecoder decode fail");
         }        
     }
+
+
+
+
+
 
     public JWKSource<SecurityContext> jwkSource() {
         return jwkSource;
@@ -201,54 +211,74 @@ public class OAuth2ResourceServerAdministration {
     //
     //////////////////////////////////////////
     public UserDetailsService userDetailsService() {
-        return new JwtUserDetailsService(null, this.securityProperties);
+        return new JwtUserDetailsService(sp, passwordEncoder);
     }
     public UserDetailsService userDetailsService(OAuth2ResourceServerUserinfoService service) {
-        return new JwtUserDetailsService(service, this.securityProperties);
+        return new JwtUserDetailsServiceDelegate(service);
     }
 
     private static class JwtUserDetailsService implements UserDetailsService{
 
         protected Log logger = LogFactory.getLog(getClass());
 
-        protected OAuth2ResourceServerUserinfoService service;
-        protected SecurityProperties securityProperties;
+        protected SecurityProperties sp;
+        protected PasswordEncoder passwordEncoder;
 
-        protected JwtUserDetailsService(OAuth2ResourceServerUserinfoService service, SecurityProperties securityProperties){
-            this.service = service;
-            this.securityProperties = securityProperties;
+        protected JwtUserDetailsService(SecurityProperties sp, PasswordEncoder passwordEncoder){
+            this.sp = sp;
+            this.passwordEncoder = passwordEncoder;
         }
 
         @Override
         public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-
-            logger.info("JwtUserDetailsService: "+username);
-
-            if(service != null) {
-                return service.loadUserByUsername(username);
-            }
             
-            if(!this.securityProperties.getUser().getName().equals(username)) {
+            String rootUser = this.sp.getUser().getName();
+            if(! rootUser.equals(username)) {
                 throw new UsernameNotFoundException("User not found: " + username);
             }
+
+            String password = this.sp.getUser().getPassword();
+            String rootPassword = passwordEncoder != null ? passwordEncoder.encode(password) : "{noop}"+password;
+            logger.info("loadUserByUsername1111: "+passwordEncoder);
+            logger.info("loadUserByUsername1111: "+rootPassword);
+
             UserDetails userDetails = User.builder()
-                .username(securityProperties.getUser().getName())
-                .password("{bcrypt}"+securityProperties.getUser().getPassword())
+                .username(rootUser)
+                .password(rootPassword)
                 .roles("ADMIN")
                 .build();
-            return userDetails;            
+            return userDetails;
         }
     }
+
+    private static class JwtUserDetailsServiceDelegate implements UserDetailsService{
+
+        protected OAuth2ResourceServerUserinfoService service;
+
+        protected JwtUserDetailsServiceDelegate(OAuth2ResourceServerUserinfoService service){
+            this.service = service;
+        }
+
+        public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+            return service.loadUserByUsername(username);
+        }        
+    }
+
+
+
+
+
+
 
 
     //////////////////////////////////////////
     //
     //////////////////////////////////////////
     public JwtEndpoints jwtEndpoints() {
-        return new JwtEndpoints(this.jwtEncoder, this.jwtDecoder, null);
+        return new JwtEndpoints(this.jwtEncoder, this.jwtDecoder, new JwtUserDetailsService(sp, passwordEncoder));
     }
     public JwtEndpoints jwtEndpoints(OAuth2ResourceServerUserinfoService service) {
-        return new JwtEndpoints(this.jwtEncoder, this.jwtDecoder, service);
+        return new JwtEndpoints(this.jwtEncoder, this.jwtDecoder, new JwtUserDetailsServiceDelegate(service));
     }
 
     @RestController
@@ -258,11 +288,11 @@ public class OAuth2ResourceServerAdministration {
         protected Log logger = LogFactory.getLog(getClass());
 
 
-        private OAuth2ResourceServerUserinfoService service;
+        private UserDetailsService service;
         private JwtEncoder jwtEncoder;
         private JwtDecoder jwtDecoder;
 
-        protected JwtEndpoints(JwtEncoder jwtEncoder, JwtDecoder jwtDecoder, OAuth2ResourceServerUserinfoService service){
+        protected JwtEndpoints(JwtEncoder jwtEncoder, JwtDecoder jwtDecoder, UserDetailsService service){
             this.jwtEncoder = jwtEncoder;
             this.jwtDecoder = jwtDecoder;
             this.service = service;
@@ -393,28 +423,17 @@ public class OAuth2ResourceServerAdministration {
         @GetMapping(value = "/oauth2/userinfo")
         public @ResponseBody ResponseEntity<Object> oauth2UserInfo(HttpServletRequest request) {
 
-
             String token = AuthenticationContext.extractHeaderToken(request);
             Jwt jwt = null;
 
             try{
                 jwt = JoseKeyEncryptor.decrypt(jwtDecoder, () -> token);
+                String username = jwt.getSubject();
+                return ResponseEntity.ok(service.loadUserByUsername(username));
+
             }catch(Exception e){
-                logger.info("JoseKeyEncryptor: "+token, e);
+                logger.info("oauth2UserInfo: "+token, e);
                 return ResponseEntity.status(HttpStatusCode.valueOf(401)).build();
-            }
-
-            if(this.service != null) {
-                try{
-                    String username = jwt.getSubject();
-                    return ResponseEntity.ok(service.loadUserByUsername(username));
-
-                }catch(Exception e){
-                    logger.info("Oauth2UserinfoService: "+token, e);
-                    return ResponseEntity.status(HttpStatusCode.valueOf(401)).build();
-                }
-            }else{
-                return ResponseEntity.ok(jwt);
             }
        }
     }
