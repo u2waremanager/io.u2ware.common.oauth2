@@ -55,7 +55,6 @@ import io.u2ware.common.oauth2.jose.JoseKeyGenerator;
 import jakarta.servlet.http.HttpServletRequest;
 
 
-@RestController
 public class OAuth2ResourceServerAdministration {
 
 
@@ -68,12 +67,12 @@ public class OAuth2ResourceServerAdministration {
     private JwtDecoder jwtDecoder;
     private boolean available =false;
 
-    private OAuth2ResourceServerUserinfoService oauth2UserinfoService;
+    // private OAuth2ResourceServerUserinfoService oauth2UserinfoService;
 
-    public OAuth2ResourceServerAdministration(SecurityProperties p1, OAuth2ResourceServerProperties p2, OAuth2ResourceServerUserinfoService oauth2UserinfoService) {
-        this(p1, p2);
-        this.oauth2UserinfoService = oauth2UserinfoService;
-    }
+    // public OAuth2ResourceServerAdministration(SecurityProperties p1, OAuth2ResourceServerProperties p2, OAuth2ResourceServerUserinfoService oauth2UserinfoService) {
+    //     this(p1, p2);
+    //     this.oauth2UserinfoService = oauth2UserinfoService;
+    // }
 
 
     public OAuth2ResourceServerAdministration(SecurityProperties p1, OAuth2ResourceServerProperties p2) {
@@ -202,16 +201,21 @@ public class OAuth2ResourceServerAdministration {
     //
     //////////////////////////////////////////
     public UserDetailsService userDetailsService() {
-        return new JwtUserDetailsService(this.securityProperties);
+        return new JwtUserDetailsService(null, this.securityProperties);
+    }
+    public UserDetailsService userDetailsService(OAuth2ResourceServerUserinfoService service) {
+        return new JwtUserDetailsService(service, this.securityProperties);
     }
 
     private static class JwtUserDetailsService implements UserDetailsService{
 
         protected Log logger = LogFactory.getLog(getClass());
 
+        protected OAuth2ResourceServerUserinfoService service;
         protected SecurityProperties securityProperties;
 
-        protected JwtUserDetailsService(SecurityProperties securityProperties){
+        protected JwtUserDetailsService(OAuth2ResourceServerUserinfoService service, SecurityProperties securityProperties){
+            this.service = service;
             this.securityProperties = securityProperties;
         }
 
@@ -219,177 +223,199 @@ public class OAuth2ResourceServerAdministration {
         public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
             logger.info("JwtUserDetailsService: "+username);
+
+            if(service != null) {
+                return service.loadUserByUsername(username);
+            }
+            
             if(!this.securityProperties.getUser().getName().equals(username)) {
                 throw new UsernameNotFoundException("User not found: " + username);
             }
-
-            UserDetails userDetails = User.withDefaultPasswordEncoder()
+            UserDetails userDetails = User.builder()
                 .username(securityProperties.getUser().getName())
-                .password(securityProperties.getUser().getPassword())
+                .password("{bcrypt}"+securityProperties.getUser().getPassword())
                 .roles("ADMIN")
                 .build();
-
-            return userDetails;
+            return userDetails;            
         }
     }
-
 
 
     //////////////////////////////////////////
     //
     //////////////////////////////////////////
-    protected Log logger = LogFactory.getLog(getClass());
-
-
-    @GetMapping(value = "/oauth2/providers")
-    public @ResponseBody List<Map<String,String>> oauth2Providers(HttpServletRequest request) {
-
-        String clientRegistrationId = ClassUtils.getShortName(getClass());
-
-        List<Map<String,String>> clients = new ArrayList<>();
-
-        UriComponents uri = ServletUriComponentsBuilder.fromContextPath(request)
-                .path("/oauth2/login")
-                .queryParam("provider", clientRegistrationId)
-                .queryParam("callback", "")
-                .build();
-
-        Map<String,String> client = new HashMap<>();
-        client.put("name", clientRegistrationId);
-        client.put("uri", uri.toString());
-        clients.add(client);                    
-
-        return clients;
+    public JwtEndpoints jwtEndpoints() {
+        return new JwtEndpoints(this.jwtEncoder, this.jwtDecoder, null);
+    }
+    public JwtEndpoints jwtEndpoints(OAuth2ResourceServerUserinfoService service) {
+        return new JwtEndpoints(this.jwtEncoder, this.jwtDecoder, service);
     }
 
-    @GetMapping(value = "/oauth2/login", params = {"provider", "callback"})
-    public @ResponseBody ResponseEntity<Object> oauth2Login(HttpServletRequest request,
-            @RequestParam("provider") String provider,
-            @RequestParam("callback") String callback) {
+    @RestController
+    public static class JwtEndpoints {
 
 
-        String clientRegistrationId = ClassUtils.getShortName(getClass());
-        if (! clientRegistrationId.equalsIgnoreCase(provider))
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-
-        saveCallback(request, callback);
-
-        UriComponents authorization = ServletUriComponentsBuilder.fromCurrentContextPath()
-                .path("/login")
-                .build();
-
-        logger.info("OAuth2 Login: " + authorization);
-        HttpHeaders headers = new HttpHeaders();
-        headers.setLocation(authorization.toUri());
-        return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY).headers(headers).build();
-    }
+        protected Log logger = LogFactory.getLog(getClass());
 
 
-    private String saveCallback(HttpServletRequest request, String value) {
-         WebUtils.setSessionAttribute(request, "callback", value);
-         return value;
-    }
-    private String loadCallBack(HttpServletRequest request) {
-         Object value = WebUtils.getSessionAttribute(request, "callback");
-         if(ObjectUtils.isEmpty(value)) return "";
-         return value.toString();
-    }
+        private OAuth2ResourceServerUserinfoService service;
+        private JwtEncoder jwtEncoder;
+        private JwtDecoder jwtDecoder;
+
+        protected JwtEndpoints(JwtEncoder jwtEncoder, JwtDecoder jwtDecoder, OAuth2ResourceServerUserinfoService service){
+            this.jwtEncoder = jwtEncoder;
+            this.jwtDecoder = jwtDecoder;
+            this.service = service;
+        }
 
 
-    @GetMapping(value = "/oauth2/logon")
-    public @ResponseBody ResponseEntity<Object> oauth2Logon(HttpServletRequest request, Authentication authentication ) {
+        @GetMapping(value = "/oauth2/providers")
+        public @ResponseBody List<Map<String,String>> oauth2Providers(HttpServletRequest request) {
 
-        logger.info("OAuth2 Logon: " + authentication);
-        logger.info("OAuth2 Logon: " + authentication.getClass());
-        logger.info("OAuth2 Logon: " + authentication.getName());
+            String clientRegistrationId = ClassUtils.getShortName(getClass());
 
-        String principalName = authentication.getName();
+            List<Map<String,String>> clients = new ArrayList<>();
 
-        Jwt jwt = JoseKeyEncryptor.encrypt(jwtEncoder, (claims)-> { 
-            claims.put("sub", principalName);
-            claims.put("email", principalName);
-            claims.put("name", principalName);
-        });
+            UriComponents uri = ServletUriComponentsBuilder.fromContextPath(request)
+                    .path("/oauth2/login")
+                    .queryParam("provider", clientRegistrationId)
+                    .queryParam("callback", "")
+                    .build();
 
-        String userinfo = ServletUriComponentsBuilder.fromContextPath(request).path("/oauth2/userinfo").build().toUriString();
-        String accessToken = jwt.getTokenValue();
-        String tokenType = "Bearer";
-        String idToken = jwt.getTokenValue();
-        String redirectUri = loadCallBack(request);
+            Map<String,String> client = new HashMap<>();
+            client.put("name", clientRegistrationId);
+            client.put("uri", uri.toString());
+            clients.add(client);                    
 
-        UriComponents callback = UriComponentsBuilder
-                .fromUriString(redirectUri)
-                .queryParam("username", principalName)
-                .queryParam("raw_info", userinfo)
-                .queryParam("raw_token", accessToken)
-                .queryParam("token_type", tokenType)
-                .queryParam("id_token", idToken)
-                .build();
+            return clients;
+        }
 
-        logger.info("OAuth2 Logon : "+callback);
+        @GetMapping(value = "/oauth2/login", params = {"provider", "callback"})
+        public @ResponseBody ResponseEntity<Object> oauth2Login(HttpServletRequest request,
+                @RequestParam("provider") String provider,
+                @RequestParam("callback") String callback) {
 
-        if(StringUtils.hasText(redirectUri)) {
+
+            String clientRegistrationId = ClassUtils.getShortName(getClass());
+            if (! clientRegistrationId.equalsIgnoreCase(provider))
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+
+            saveCallback(request, callback);
+
+            UriComponents authorization = ServletUriComponentsBuilder.fromCurrentContextPath()
+                    .path("/login")
+                    .build();
+
+            logger.info("OAuth2 Login: " + authorization);
             HttpHeaders headers = new HttpHeaders();
-            headers.setLocation(callback.toUri());
+            headers.setLocation(authorization.toUri());
             return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY).headers(headers).build();
-
-        }else{
-            return ResponseEntity.status(HttpStatus.OK).contentType(MediaType.APPLICATION_JSON).body(callback.getQueryParams());
-        }
-    }
-
-
-
-    @RequestMapping("/oauth2/logout")
-    public @ResponseBody ResponseEntity<Object> oauth2Logout(HttpServletRequest request){
-        UriComponents logout = ServletUriComponentsBuilder.fromContextPath(request)
-                .path("/logout")
-                .build();
-
-        logger.info("OAuth2 Logout : "+logout);
-        HttpHeaders headers = new HttpHeaders();
-        headers.setLocation(logout.toUri());
-        return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY).headers(headers).build();
-    }
-
-
-    @RequestMapping("/oauth2/logoff")
-    public @ResponseBody ResponseEntity<Object> oauth2Logoff(){
-        logger.info("OAuth2 Logoff:");
-
-        Map<String,Object> response = new HashMap<>();
-        response.put("logoff", "success");
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping(value = "/oauth2/userinfo")
-    public @ResponseBody ResponseEntity<Object> oauth2UserInfo(HttpServletRequest request) {
-
-
-        String token = AuthenticationContext.extractHeaderToken(request);
-        Jwt jwt = null;
-
-        try{
-            jwt = JoseKeyEncryptor.decrypt(jwtDecoder, () -> token);
-        }catch(Exception e){
-            logger.info("JoseKeyEncryptor: "+token, e);
-            return ResponseEntity.status(HttpStatusCode.valueOf(401)).build();
         }
 
-        if(this.oauth2UserinfoService != null) {
+
+        private String saveCallback(HttpServletRequest request, String value) {
+            WebUtils.setSessionAttribute(request, "callback", value);
+            return value;
+        }
+        private String loadCallBack(HttpServletRequest request) {
+            Object value = WebUtils.getSessionAttribute(request, "callback");
+            if(ObjectUtils.isEmpty(value)) return "";
+            return value.toString();
+        }
+
+
+        @GetMapping(value = "/oauth2/logon")
+        public @ResponseBody ResponseEntity<Object> oauth2Logon(HttpServletRequest request, Authentication authentication ) {
+
+            logger.info("OAuth2 Logon: " + authentication);
+            logger.info("OAuth2 Logon: " + authentication.getClass());
+            logger.info("OAuth2 Logon: " + authentication.getName());
+
+            String principalName = authentication.getName();
+
+            Jwt jwt = JoseKeyEncryptor.encrypt(jwtEncoder, (claims)-> { 
+                claims.put("sub", principalName);
+                claims.put("email", principalName);
+                claims.put("name", principalName);
+            });
+
+            String userinfo = ServletUriComponentsBuilder.fromContextPath(request).path("/oauth2/userinfo").build().toUriString();
+            String accessToken = jwt.getTokenValue();
+            String tokenType = "Bearer";
+            String idToken = jwt.getTokenValue();
+            String redirectUri = loadCallBack(request);
+
+            UriComponents callback = UriComponentsBuilder
+                    .fromUriString(redirectUri)
+                    .queryParam("username", principalName)
+                    .queryParam("raw_info", userinfo)
+                    .queryParam("raw_token", accessToken)
+                    .queryParam("token_type", tokenType)
+                    .queryParam("id_token", idToken)
+                    .build();
+
+            logger.info("OAuth2 Logon : "+callback);
+
+            if(StringUtils.hasText(redirectUri)) {
+                HttpHeaders headers = new HttpHeaders();
+                headers.setLocation(callback.toUri());
+                return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY).headers(headers).build();
+
+            }else{
+                return ResponseEntity.status(HttpStatus.OK).contentType(MediaType.APPLICATION_JSON).body(callback.getQueryParams());
+            }
+        }
+
+
+
+        @RequestMapping("/oauth2/logout")
+        public @ResponseBody ResponseEntity<Object> oauth2Logout(HttpServletRequest request){
+            UriComponents logout = ServletUriComponentsBuilder.fromContextPath(request)
+                    .path("/logout")
+                    .build();
+
+            logger.info("OAuth2 Logout : "+logout);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setLocation(logout.toUri());
+            return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY).headers(headers).build();
+        }
+
+
+        @RequestMapping("/oauth2/logoff")
+        public @ResponseBody ResponseEntity<Object> oauth2Logoff(){
+            logger.info("OAuth2 Logoff:");
+
+            Map<String,Object> response = new HashMap<>();
+            response.put("logoff", "success");
+            return ResponseEntity.ok(response);
+        }
+
+        @GetMapping(value = "/oauth2/userinfo")
+        public @ResponseBody ResponseEntity<Object> oauth2UserInfo(HttpServletRequest request) {
+
+
+            String token = AuthenticationContext.extractHeaderToken(request);
+            Jwt jwt = null;
+
             try{
-                String username = jwt.getSubject();
-                return ResponseEntity.ok(oauth2UserinfoService.loadUserByUsername(username));
-
+                jwt = JoseKeyEncryptor.decrypt(jwtDecoder, () -> token);
             }catch(Exception e){
-                logger.info("Oauth2UserinfoService: "+token, e);
+                logger.info("JoseKeyEncryptor: "+token, e);
                 return ResponseEntity.status(HttpStatusCode.valueOf(401)).build();
             }
-        }else{
-            return ResponseEntity.ok(jwt);
-        }
-   }
 
+            if(this.service != null) {
+                try{
+                    String username = jwt.getSubject();
+                    return ResponseEntity.ok(service.loadUserByUsername(username));
 
-
+                }catch(Exception e){
+                    logger.info("Oauth2UserinfoService: "+token, e);
+                    return ResponseEntity.status(HttpStatusCode.valueOf(401)).build();
+                }
+            }else{
+                return ResponseEntity.ok(jwt);
+            }
+       }
+    }
 }

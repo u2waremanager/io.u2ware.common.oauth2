@@ -41,7 +41,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 @Configuration
 @Controller
-public class JwtEndpoints {
+public class JwtOldEndpoints {
 
     protected Log logger = LogFactory.getLog(getClass());
 
