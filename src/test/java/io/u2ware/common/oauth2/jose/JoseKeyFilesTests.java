@@ -44,11 +44,11 @@ public class JoseKeyFilesTests {
 
         JWKSource<SecurityContext> jwkSource1 = JoseKeyCodec.source(rsaKey1);
         NimbusJwtEncoder encoder1 = JoseKeyCodec.encoder(jwkSource1);
-        NimbusJwtDecoder decoder1 = JoseKeyCodec.decoder(jwkSource1);
+        // NimbusJwtDecoder decoder1 = JoseKeyCodec.decoder(jwkSource1);
 
         
         JWKSource<SecurityContext> jwkSource2 = JoseKeyCodec.source(rsaKey2);
-        NimbusJwtEncoder encoder2 = JoseKeyCodec.encoder(jwkSource2);
+        // NimbusJwtEncoder encoder2 = JoseKeyCodec.encoder(jwkSource2);
         NimbusJwtDecoder decoder2 = JoseKeyCodec.decoder(jwkSource2);
 
        
