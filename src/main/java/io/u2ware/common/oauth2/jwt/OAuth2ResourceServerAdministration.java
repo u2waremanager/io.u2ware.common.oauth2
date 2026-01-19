@@ -26,7 +26,6 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -61,7 +60,7 @@ public class OAuth2ResourceServerAdministration {
 
 
     private SecurityProperties sp;
-    private OAuth2ResourceServerProperties op;
+    // private OAuth2ResourceServerProperties op;
     private PasswordEncoder passwordEncoder;
 
     private JWKSource<SecurityContext> jwkSource;
@@ -81,7 +80,7 @@ public class OAuth2ResourceServerAdministration {
     public OAuth2ResourceServerAdministration(SecurityProperties sp, OAuth2ResourceServerProperties op, PasswordEncoder passwordEncoder) {
 
         this.sp = sp;
-        this.op = op;
+        // this.op = op;
         this.passwordEncoder = passwordEncoder;
 
         String username = sp.getUser().getName();
@@ -424,16 +423,22 @@ public class OAuth2ResourceServerAdministration {
         public @ResponseBody ResponseEntity<Object> oauth2UserInfo(HttpServletRequest request) {
 
             String token = AuthenticationContext.extractHeaderToken(request);
-            Jwt jwt = null;
 
+            Jwt jwt = null;
             try{
                 jwt = JoseKeyEncryptor.decrypt(jwtDecoder, () -> token);
+            }catch(Exception e){
+                logger.info("oauth2UserInfo: "+token, e);
+                return ResponseEntity.status(HttpStatusCode.valueOf(401)).build();
+            }
+
+            try{
                 String username = jwt.getSubject();
                 return ResponseEntity.ok(service.loadUserByUsername(username));
 
             }catch(Exception e){
                 logger.info("oauth2UserInfo: "+token, e);
-                return ResponseEntity.status(HttpStatusCode.valueOf(401)).build();
+                return ResponseEntity.ok(jwt);
             }
        }
     }
