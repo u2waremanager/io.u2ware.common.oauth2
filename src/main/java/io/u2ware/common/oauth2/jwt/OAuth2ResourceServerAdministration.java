@@ -59,18 +59,16 @@ import jakarta.servlet.http.HttpServletRequest;
 public class OAuth2ResourceServerAdministration {
 
 
-    private SecurityProperties sp;
-    // private OAuth2ResourceServerProperties op;
-    private PasswordEncoder passwordEncoder;
+    protected SecurityProperties sp;
+    protected OAuth2ResourceServerProperties op;
+    protected PasswordEncoder passwordEncoder;
 
-    private JWKSource<SecurityContext> jwkSource;
-    private JWKSet jwkSet;
-    private JwtEncoder jwtEncoder;
-    private JwtDecoder jwtDecoder;
-    private boolean available =false;
+    protected JWKSource<SecurityContext> jwkSource;
+    protected JWKSet jwkSet;
+    protected JwtEncoder jwtEncoder;
+    protected JwtDecoder jwtDecoder;
+    protected boolean available =false;
 
-    // private UserDetailsService userDetailsService;
-    // private UserDetailsService userDetailsService;
 
 
     public OAuth2ResourceServerAdministration(SecurityProperties sp, OAuth2ResourceServerProperties op) {
@@ -80,7 +78,7 @@ public class OAuth2ResourceServerAdministration {
     public OAuth2ResourceServerAdministration(SecurityProperties sp, OAuth2ResourceServerProperties op, PasswordEncoder passwordEncoder) {
 
         this.sp = sp;
-        // this.op = op;
+        this.op = op;
         this.passwordEncoder = passwordEncoder;
 
         String username = sp.getUser().getName();
