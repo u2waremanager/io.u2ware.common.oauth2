@@ -11,6 +11,7 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.OAuth2ResourceServerProperties;
 import org.springframework.core.convert.converter.Converter;
@@ -272,10 +273,10 @@ public class OAuth2ResourceServerAdministration {
     //
     //////////////////////////////////////////
     public JwtEndpoints jwtEndpoints() {
-        return new JwtEndpoints(this.jwtEncoder, this.jwtDecoder, new JwtUserDetailsService(sp, passwordEncoder));
+        return new JwtEndpoints(this.sp, this.op, this.jwtEncoder, this.jwtDecoder, new JwtUserDetailsService(sp, passwordEncoder));
     }
     public JwtEndpoints jwtEndpoints(OAuth2ResourceServerUserinfoService service) {
-        return new JwtEndpoints(this.jwtEncoder, this.jwtDecoder, new JwtUserDetailsServiceDelegate(service));
+        return new JwtEndpoints(this.sp, this.op, this.jwtEncoder, this.jwtDecoder, new JwtUserDetailsServiceDelegate(service));
     }
 
     @RestController
@@ -284,22 +285,34 @@ public class OAuth2ResourceServerAdministration {
 
         protected Log logger = LogFactory.getLog(getClass());
 
-
-        private UserDetailsService service;
+        private SecurityProperties sp;
+        private OAuth2ResourceServerProperties op;
         private JwtEncoder jwtEncoder;
         private JwtDecoder jwtDecoder;
+        private UserDetailsService service;
 
-        protected JwtEndpoints(JwtEncoder jwtEncoder, JwtDecoder jwtDecoder, UserDetailsService service){
+        @Value("${spring.application.name:}")
+        private String name;
+
+        protected JwtEndpoints(SecurityProperties sp, OAuth2ResourceServerProperties op, JwtEncoder jwtEncoder, JwtDecoder jwtDecoder, UserDetailsService service){
+            this.sp = sp;
+            this.op = op;
             this.jwtEncoder = jwtEncoder;
             this.jwtDecoder = jwtDecoder;
             this.service = service;
         }
 
 
+        private String clientRegistrationName(){
+            if(StringUtils.hasText(name)) return name;
+            return sp.getUser().getName();
+        }
+
+
         @GetMapping(value = "/oauth2/providers")
         public @ResponseBody List<Map<String,String>> oauth2Providers(HttpServletRequest request) {
 
-            String clientRegistrationId = ClassUtils.getShortName(getClass());
+            String clientRegistrationId = clientRegistrationName();
 
             List<Map<String,String>> clients = new ArrayList<>();
 
@@ -323,7 +336,7 @@ public class OAuth2ResourceServerAdministration {
                 @RequestParam("callback") String callback) {
 
 
-            String clientRegistrationId = ClassUtils.getShortName(getClass());
+            String clientRegistrationId = clientRegistrationName();
             if (! clientRegistrationId.equalsIgnoreCase(provider))
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
 
