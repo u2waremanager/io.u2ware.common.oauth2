@@ -58,13 +58,10 @@ public abstract class OAuth2LoginEndpoint {
 
         @Override
         protected URI uri(HttpServletRequest request, String provider, String callback) {
-
             if(! provider.equals(applicationName)) return null;
-
             UriComponents authorization = ServletUriComponentsBuilder.fromContextPath(request)
                     .path("/login")
                     .build();
-
             WebUtils.setSessionAttribute(request, "callback", callback);
 
             return authorization.toUri();
@@ -74,12 +71,18 @@ public abstract class OAuth2LoginEndpoint {
     ///////////////////////////////////////
     //
     ///////////////////////////////////////  
-    public static class ClientBroker extends OAuth2LoginEndpoint{
+    public static class ClientBroker extends ResourceServer{
 
         private ClientBroker(){}
+        private @Value("${spring.application.name}") String applicationName;
         
         @Override
         protected URI uri(HttpServletRequest request, String provider, String callback) {
+
+            if(provider.equals(applicationName)) {
+                return super.uri(request, provider, callback);
+            }
+
             UriComponents authorization = ServletUriComponentsBuilder.fromCurrentContextPath()
                     .path("/oauth2/authorization")
                     .pathSegment(provider)

@@ -45,7 +45,7 @@ public abstract class OAuth2LogoutEndpoint {
     ///////////////////////////////////////
     //
     ///////////////////////////////////////
-    public static class ClientBroker extends OAuth2LogoutEndpoint{
+    public static class ClientBroker extends ResourceServer{
     }
 
     ///////////////////////////////////////

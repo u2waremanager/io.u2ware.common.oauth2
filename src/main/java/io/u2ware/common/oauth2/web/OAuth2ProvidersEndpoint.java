@@ -72,7 +72,7 @@ public abstract class OAuth2ProvidersEndpoint {
     ///////////////////////////////////////
     //
     ///////////////////////////////////////   
-    public static class ClientBroker extends OAuth2ProvidersEndpoint{
+    public static class ClientBroker extends ResourceServer{
 
         private ClientBroker(){}
         private @Value("${spring.application.name}") String applicationName;
@@ -90,8 +90,7 @@ public abstract class OAuth2ProvidersEndpoint {
                 clients.add(client);
             });
 
-            Map<String,String> client = provider(request, applicationName, applicationName);           
-            clients.add(client);            
+            super.providers(request, clients);
         }
     }
 

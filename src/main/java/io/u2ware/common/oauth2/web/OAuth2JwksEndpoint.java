@@ -47,14 +47,8 @@ public abstract class OAuth2JwksEndpoint {
     ///////////////////////////////////////
     //
     ///////////////////////////////////////  
-    public static class ClientBroker extends OAuth2JwksEndpoint{
+    public static class ClientBroker extends ResourceServer{
         private ClientBroker(){}
-        private @Autowired(required = false) @Lazy JWKSet jwkSet;
-
-        @Override
-        public Object jwks() throws Exception {
-            return jwkSet.toPublicJWKSet().toJSONObject();
-        }
     }
 
     ///////////////////////////////////////

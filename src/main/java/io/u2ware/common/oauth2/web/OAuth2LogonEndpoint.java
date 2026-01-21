@@ -3,12 +3,12 @@ package io.u2ware.common.oauth2.web;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
@@ -48,8 +48,6 @@ public abstract class OAuth2LogonEndpoint {
     public @ResponseBody ResponseEntity<Object> oauth2Logon(HttpServletRequest request, Authentication authentication) {
 
         logger.info("OAuth2 Logon: " + authentication);
-        logger.info("OAuth2 Logon: " + authentication.getClass());
-        logger.info("OAuth2 Logon: " + authentication.getName());
 
         if (authentication == null || ! authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -73,7 +71,6 @@ public abstract class OAuth2LogonEndpoint {
                     // .queryParam("id_token", idToken)
                     .build();
 
-            logger.info("OAuth2 Logon : " + callback);
             HttpHeaders headers = new HttpHeaders();
             headers.setLocation(redirectUri.toUri());
             return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY).headers(headers).build();
@@ -92,7 +89,6 @@ public abstract class OAuth2LogonEndpoint {
                     .contentType(MediaType.APPLICATION_JSON)
                     .headers(headers)
                     .body(headers);
-
         }
     }
 
@@ -147,19 +143,23 @@ public abstract class OAuth2LogonEndpoint {
     ///////////////////////////////////////
     //
     ///////////////////////////////////////
-    public static class ClientBroker extends OAuth2LogonEndpoint{
+    public static class ClientBroker extends ResourceServer{
 
         private ClientBroker(){}
 
-        private @Autowired(required = false) @Lazy ClientRegistrationRepository clientRegistrationRepository;
-        private @Autowired(required = false) @Lazy AuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository;
-        private @Autowired(required = false) @Lazy OAuth2AuthorizedClientService authorizedClientService;
+        private @Autowired(required = false) ClientRegistrationRepository clientRegistrationRepository;
+        private @Autowired(required = false) AuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository;
+        private @Autowired(required = false) OAuth2AuthorizedClientService authorizedClientService;
         private @Autowired(required = false) @Lazy JwtEncoder jwtEncoder;
 
         @Override
         protected MultiValueMap<String, String> parameters(HttpServletRequest request, Authentication authentication) {
 
-            OAuth2AuthenticationToken oauth2AuthenticationToken = null;// from authentication
+            if(authentication instanceof UsernamePasswordAuthenticationToken) {
+                return super.parameters(request, authentication);
+            }
+
+            OAuth2AuthenticationToken oauth2AuthenticationToken = (OAuth2AuthenticationToken)authentication;// from authentication
 
             String principalName = oauth2AuthenticationToken.getName();
             String clientRegistrationId = oauth2AuthenticationToken.getAuthorizedClientRegistrationId();
@@ -175,11 +175,11 @@ public abstract class OAuth2LogonEndpoint {
             String tokenType = authorizedClient.getAccessToken().getTokenType().getValue();
             String accessToken = authorizedClient.getAccessToken().getTokenValue();
             String idToken = jwt.getTokenValue();
-            logger.info("OAuth2 clientRegistration       : " + clientRegistration);
-            logger.info("OAuth2 authorizedClient         : " + authorizedClient);
-            logger.info("OAuth2 principalName            : " + principalName);
-            logger.info("OAuth2 jwtGenerator             : " + jwtGenerator.name());
-            logger.info("OAuth2 jwt                      : " + jwt.getClaims());
+            // logger.info("OAuth2 clientRegistration       : " + clientRegistration);
+            // logger.info("OAuth2 authorizedClient         : " + authorizedClient);
+            // logger.info("OAuth2 principalName            : " + principalName);
+            // logger.info("OAuth2 jwtGenerator             : " + jwtGenerator.name());
+            // logger.info("OAuth2 jwt                      : " + jwt.getClaims());
 
 
             MultiValueMap<String,String> parameters = new LinkedMultiValueMap<>();
@@ -194,14 +194,13 @@ public abstract class OAuth2LogonEndpoint {
         @Override
         protected String callback(HttpServletRequest request, Authentication authentication) {
 
+            if(authentication instanceof UsernamePasswordAuthenticationToken) {
+                return super.callback(request, authentication);
+            }
             OAuth2AuthorizationRequest authorizationRequest = authorizationRequestRepository
                     .loadAuthorizationRequest(request);
-            logger.info("OAuth2 authorizationRequest     : " + authorizationRequest);
-            return authorizationRequest.getRedirectUri();
-
+            return authorizationRequest != null ? authorizationRequest.getRedirectUri() : "";
         }
-
-
     }
 
     ///////////////////////////////////////
