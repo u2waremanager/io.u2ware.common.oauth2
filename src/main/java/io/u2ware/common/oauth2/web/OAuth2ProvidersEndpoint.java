@@ -86,8 +86,11 @@ public abstract class OAuth2ProvidersEndpoint {
             clientRegistrations.forEach(clientRegistration->{
                 String clientRegistrationId = clientRegistration.getRegistrationId();
                 String clientName = clientRegistration.getClientName();
-                Map<String,String> client = provider(request, clientRegistrationId, clientName);         
-                clients.add(client);
+
+                if(! "dummy".equals(clientRegistrationId)) {
+                    Map<String,String> client = provider(request, clientRegistrationId, clientName);         
+                    clients.add(client);
+                }
             });
 
             super.providers(request, clients);
