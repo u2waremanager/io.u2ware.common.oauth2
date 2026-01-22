@@ -18,8 +18,6 @@ import org.springframework.web.util.WebUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-
-// @Component
 public class OAuth2AuthorizationRequestRepository implements AuthorizationRequestRepository<OAuth2AuthorizationRequest> {
 
     private Log logger = LogFactory.getLog(getClass());
@@ -40,17 +38,17 @@ public class OAuth2AuthorizationRequestRepository implements AuthorizationReques
 
         String state = authorizationRequest.getState();
         Assert.hasText(state, "authorizationRequest.state cannot be empty");
-        logger.info("\t saveAuthorizationRequest: " + state);
+        logger.trace("\t saveAuthorizationRequest: " + state);
 
         String key = getAuthorizationRequestKey(request, state);
         authorizationRequests.put(key, authorizationRequest);
-        logger.info("\t saveAuthorizationRequest: " + key);
-        logger.info("\t saveAuthorizationRequest: " + authorizationRequest);
+        logger.trace("\t saveAuthorizationRequest: " + key);
+        logger.trace("\t saveAuthorizationRequest: " + authorizationRequest);
 
         String callback = request.getParameter("callback");
         if (StringUtils.hasText(callback)) {
             callbackRequests.put(key, request.getParameter("callback"));
-            logger.info("\t saveAuthorizationRequest: " + callback);
+            logger.trace("\t saveAuthorizationRequest: " + callback);
         }
     }
 
@@ -61,7 +59,7 @@ public class OAuth2AuthorizationRequestRepository implements AuthorizationReques
         Assert.notNull(request, "request cannot be null");
 
         String state = request.getParameter(OAuth2ParameterNames.STATE);
-        logger.info("\t removeAuthorizationRequest: " + state);
+        logger.trace("\t removeAuthorizationRequest: " + state);
         if (state == null) {
             return null;
         }
@@ -69,14 +67,14 @@ public class OAuth2AuthorizationRequestRepository implements AuthorizationReques
 
         String key = getAuthorizationRequestKey(request, state);
         OAuth2AuthorizationRequest authorizationRequest = authorizationRequests.remove(key);
-        logger.info("\t removeAuthorizationRequest: " + key);
-        logger.info("\t removeAuthorizationRequest: " + authorizationRequest);
+        logger.trace("\t removeAuthorizationRequest: " + key);
+        logger.trace("\t removeAuthorizationRequest: " + authorizationRequest);
 
 
         String callback = callbackRequests.remove(key);
         if (StringUtils.hasText(callback)) {
             saveCallback(request, callback);
-            logger.info("\t removeAuthorizationRequest : " + callback);
+            logger.trace("\t removeAuthorizationRequest : " + callback);
         }
 
         return authorizationRequest;
@@ -100,14 +98,14 @@ public class OAuth2AuthorizationRequestRepository implements AuthorizationReques
         Assert.notNull(request, "request cannot be null");
 
         String state = request.getParameter(OAuth2ParameterNames.STATE);
-        logger.info("\t loadAuthorizationRequest : " + state);
+        logger.trace("\t loadAuthorizationRequest : " + state);
 
         if (state == null) {
 
             String callback = loadCallBack(request);
 
             if (StringUtils.hasText(callback)) {
-                logger.info("\t loadAuthorizationRequest : " + callback);
+                logger.trace("\t loadAuthorizationRequest : " + callback);
                 //Return Fake OAuth2AuthorizationRequest
                 return OAuth2AuthorizationRequest
                         .authorizationCode()
@@ -122,8 +120,8 @@ public class OAuth2AuthorizationRequestRepository implements AuthorizationReques
         } else {
             String key = getAuthorizationRequestKey(request, state);
             OAuth2AuthorizationRequest authorizationRequest = authorizationRequests.get(key);
-            logger.info("\t loadAuthorizationRequest : " + key);
-            logger.info("\t loadAuthorizationRequest : " + authorizationRequests);
+            logger.trace("\t loadAuthorizationRequest : " + key);
+            logger.trace("\t loadAuthorizationRequest : " + authorizationRequests);
             return authorizationRequest;
         }
     }

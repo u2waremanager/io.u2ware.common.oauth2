@@ -28,8 +28,8 @@ public abstract class OAuth2LogoutEndpoint {
         UriComponents logout = ServletUriComponentsBuilder.fromContextPath(request)
                 .path("/logout")
                 .build();
+        logger.info("\t[/oauth2/logout]: "+logout);
 
-        logger.info("OAuth2 Logout : "+logout);
         HttpHeaders headers = new HttpHeaders();
         headers.setLocation(logout.toUri());
         return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY).headers(headers).build();

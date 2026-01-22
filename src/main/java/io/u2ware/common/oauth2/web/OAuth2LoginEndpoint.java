@@ -31,14 +31,11 @@ public abstract class OAuth2LoginEndpoint {
             @RequestParam("provider") String provider,
             @RequestParam("callback") String callback) {
 
-        logger.info("OAuth2 Login provider: " + provider);
-        logger.info("OAuth2 Login callback: " + callback);
-
         URI authorization = uri(request, provider, callback);
         if(authorization == null)
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
 
-        logger.info("OAuth2 Login moved: " + authorization);
+        logger.info("\t[/oauth2/login]: "+authorization);
         HttpHeaders headers = new HttpHeaders();
         headers.setLocation(authorization);
         return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY).headers(headers).build();

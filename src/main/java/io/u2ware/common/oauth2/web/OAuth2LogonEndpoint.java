@@ -3,6 +3,7 @@ package io.u2ware.common.oauth2.web;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -43,11 +44,8 @@ public abstract class OAuth2LogonEndpoint {
 
     protected OAuth2LogonEndpoint(){}
 
-
     @RequestMapping(value = "/oauth2/logon", method = {RequestMethod.GET, RequestMethod.POST})
     public @ResponseBody ResponseEntity<Object> oauth2Logon(HttpServletRequest request, Authentication authentication) {
-
-        logger.info("OAuth2 Logon: " + authentication);
 
         if (authentication == null || ! authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -56,8 +54,7 @@ public abstract class OAuth2LogonEndpoint {
         MultiValueMap<String,String> parameters = parameters(request, authentication);
         String callback = callback(request, authentication);
         
-        logger.info("OAuth2 Logon : " + parameters);
-        logger.info("OAuth2 Logon : " + callback);
+        logger.info("\t[/oauth2/logon]: "+parameters);
 
         if(StringUtils.hasText(callback)) {
 
@@ -104,6 +101,7 @@ public abstract class OAuth2LogonEndpoint {
 
         private ResourceServer(){}
         private @Autowired(required = false) @Lazy JwtEncoder jwtEncoder;
+        private @Value("${spring.application.name}") String applicationName;
 
         @Override
         protected MultiValueMap<String, String> parameters(HttpServletRequest request, Authentication authentication) {
@@ -114,6 +112,7 @@ public abstract class OAuth2LogonEndpoint {
                 claims.put("sub", principalName);
                 claims.put("email", principalName);
                 claims.put("name", principalName);
+                claims.put("nonce", applicationName);
             });
 
             String accessToken = jwt.getTokenValue();
@@ -125,6 +124,7 @@ public abstract class OAuth2LogonEndpoint {
 
             MultiValueMap<String,String> parameters = new LinkedMultiValueMap<>();
             parameters.add("username", principalName);
+            parameters.add("raw_name", principalName);
             parameters.add("raw_info", userinfo);
             parameters.add("raw_token", accessToken);
             parameters.add("token_type", tokenType);
@@ -171,19 +171,20 @@ public abstract class OAuth2LogonEndpoint {
             Jwt jwt = jwtGenerator.generate(jwtEncoder, oauth2AuthenticationToken);
 
 
+
             String userinfo = clientRegistration.getProviderDetails().getUserInfoEndpoint().getUri();
             String tokenType = authorizedClient.getAccessToken().getTokenType().getValue();
             String accessToken = authorizedClient.getAccessToken().getTokenValue();
             String idToken = jwt.getTokenValue();
+            String name = jwt.getClaimAsString("name");
             // logger.info("OAuth2 clientRegistration       : " + clientRegistration);
             // logger.info("OAuth2 authorizedClient         : " + authorizedClient);
             // logger.info("OAuth2 principalName            : " + principalName);
-            // logger.info("OAuth2 jwtGenerator             : " + jwtGenerator.name());
-            // logger.info("OAuth2 jwt                      : " + jwt.getClaims());
 
 
             MultiValueMap<String,String> parameters = new LinkedMultiValueMap<>();
             parameters.add("username", principalName);
+            parameters.add("raw_name", name);
             parameters.add("raw_info", userinfo);
             parameters.add("raw_token", accessToken);
             parameters.add("token_type", tokenType);

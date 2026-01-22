@@ -29,11 +29,9 @@ public abstract class OAuth2ProvidersEndpoint {
     @RequestMapping(value = "/oauth2/providers", method = {RequestMethod.GET})
     public @ResponseBody List<Map<String,String>> oauth2Providers(HttpServletRequest request) {
 
-        logger.info("OAuth2ProvidersEndpoint: ");
-
         List<Map<String,String>> clients = new ArrayList<>();
         providers(request, clients);
-        logger.info("OAuth2ProvidersEndpoint: "+clients);
+        logger.info("\t[/oauth2/providers]: "+clients);
         
         return clients;            
     }
@@ -80,7 +78,6 @@ public abstract class OAuth2ProvidersEndpoint {
 
         @Override @SuppressWarnings("unchecked")
         protected void providers(HttpServletRequest request, List<Map<String, String>> clients) {
-            logger.info("OAuth2ProvidersEndpoint: "+clientRegistrationRepository);
 
             Iterable<ClientRegistration> clientRegistrations = (Iterable<ClientRegistration>)clientRegistrationRepository;
             clientRegistrations.forEach(clientRegistration->{

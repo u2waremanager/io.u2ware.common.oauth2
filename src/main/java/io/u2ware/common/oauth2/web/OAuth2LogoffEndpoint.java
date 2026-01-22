@@ -19,7 +19,7 @@ public class OAuth2LogoffEndpoint {
     
     @RequestMapping("/oauth2/logoff")
     public @ResponseBody ResponseEntity<Object> oauth2Logoff(){
-        logger.info("OAuth2 Logoff:");
+        logger.info("\t[/oauth2/logoff]: ");
 
         Map<String,Object> response = new HashMap<>();
         response.put("logoff", "success");

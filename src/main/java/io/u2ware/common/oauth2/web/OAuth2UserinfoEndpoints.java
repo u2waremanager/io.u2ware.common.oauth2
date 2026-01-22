@@ -37,15 +37,16 @@ public abstract class OAuth2UserinfoEndpoints {
         try{
             jwt = jwt(token);
         }catch(Exception e){
-            logger.info("oauth2UserInfo: "+token, e);
             return ResponseEntity.status(HttpStatusCode.valueOf(401)).build();
         }
 
         try{
             UserDetails user = userDetails(jwt);
+            logger.info("\t[/oauth2/userinfo]: "+user);
             return ResponseEntity.ok(user);
 
         }catch(Exception e){
+            logger.info("\t[/oauth2/userinfo]: "+jwt.getClaims());
             return ResponseEntity.ok(jwt);
         }
     }

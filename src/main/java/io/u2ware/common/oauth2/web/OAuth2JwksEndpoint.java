@@ -22,6 +22,8 @@ public abstract class OAuth2JwksEndpoint {
     
     @RequestMapping(value = "/oauth2/jwks", method = {RequestMethod.GET})
     public ResponseEntity<Object> oauth2jwks(HttpServletRequest request) {
+
+        logger.info("\t[/oauth2/jwks]: ");
         try {
             return ResponseEntity.ok(jwks());
         } catch (Exception e) {
