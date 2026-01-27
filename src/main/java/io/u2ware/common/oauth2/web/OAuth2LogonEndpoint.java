@@ -1,5 +1,4 @@
 package io.u2ware.common.oauth2.web;
-
 import java.io.IOException;
 
 import org.apache.commons.logging.Log;
@@ -21,10 +20,13 @@ import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequ
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.stereotype.Controller;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -35,7 +37,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-// @Controller
+@Controller
 public class OAuth2LogonEndpoint implements AuthenticationSuccessHandler {
 
     protected final Log logger = LogFactory.getLog(getClass());
@@ -45,7 +47,8 @@ public class OAuth2LogonEndpoint implements AuthenticationSuccessHandler {
     private @Autowired(required = false) @Lazy OAuth2AuthorizedClientService authorizedClientService;
     private @Autowired(required = false) @Lazy JwtEncoder jwtEncoder;
 
-    // @RequestMapping(value = "/oauth2/logon2", method = {RequestMethod.GET, RequestMethod.POST})
+
+    @RequestMapping(value = "/oauth2/logon", method = {RequestMethod.GET})
     public @ResponseBody ResponseEntity<Object> oauth2Logon(HttpServletRequest request, Authentication authentication) {
 
 
@@ -77,62 +80,24 @@ public class OAuth2LogonEndpoint implements AuthenticationSuccessHandler {
                     .headers(headers)
                     .body(headers);
         }
-
-        
-
-
     }
+
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
             Authentication authentication) throws IOException, ServletException {
 
-        // logger.info(request);
-        // logger.info(response);
-        // logger.info(authentication);
-        // logger.info("\t[/oauth2/logon]: "+clientRegistrationRepository);
-        // logger.info("\t[/oauth2/logon]: "+authorizationRequestRepository);
-        // logger.info("\t[/oauth2/logon]: "+authorizedClientService);
-        // logger.info("\t[/oauth2/logon]: "+jwtEncoder);
 
-        // System.err.println("=================================");
-        // System.err.println("");
-        // System.err.println(authentication.getClass());
-        // System.err.println(authentication.getPrincipal().getClass());
-        // System.err.println("");
-        // System.err.println("=================================");
+                								System.err.println("=================================");
+								System.err.println("");
+								System.err.println(authentication.getClass());
+								System.err.println(authentication.getPrincipal().getClass());
+								System.err.println("");
+								System.err.println("=================================");
 
-        MultiValueMap<String,String> parameters = parameters(request, authentication);
-        logger.info("\t[/oauth2/logon]: "+parameters);
-        String callback = callback(request, authentication);
-        logger.info("\t[/oauth2/logon]: "+callback);
-
-
-        if(StringUtils.hasText(callback)) {
-
-            UriComponents redirectUri = UriComponentsBuilder
-                    .fromUriString(callback)
-                    .queryParams(parameters)
-                    .build();
-
-
-            response.sendRedirect(redirectUri.toUriString());
-
-        }else{
-
-
-
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.addAll(parameters);
-
-            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-            response.setStatus(200);
-            response.getWriter().println(headers);
-            response.getWriter().flush();
-            response.getWriter().close();
-        }
     }
+
+
 
     protected MultiValueMap<String, String> parameters(HttpServletRequest request, Authentication authentication) {
 
@@ -181,5 +146,5 @@ public class OAuth2LogonEndpoint implements AuthenticationSuccessHandler {
         Object value = WebUtils.getSessionAttribute(request, "callback");
         if(ObjectUtils.isEmpty(value)) return "";
         return value.toString();
-    }
+    }	
 }
