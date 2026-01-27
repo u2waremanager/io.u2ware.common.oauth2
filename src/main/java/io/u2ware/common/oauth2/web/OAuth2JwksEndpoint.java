@@ -15,10 +15,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 @Controller
-public abstract class OAuth2JwksEndpoint {
+public class OAuth2JwksEndpoint {
 
     protected final Log logger = LogFactory.getLog(getClass());
-    protected OAuth2JwksEndpoint(){}
+
+    private @Autowired(required = false) @Lazy JWKSet jwkSet;
     
     @RequestMapping(value = "/oauth2/jwks", method = {RequestMethod.GET})
     public ResponseEntity<Object> oauth2jwks(HttpServletRequest request) {
@@ -31,46 +32,8 @@ public abstract class OAuth2JwksEndpoint {
         }
     }
 
-    public abstract Object jwks() throws Exception;
-
-    ///////////////////////////////////////
-    //
-    ///////////////////////////////////////
-    public static class ResourceServer extends OAuth2JwksEndpoint{
-        private ResourceServer(){}
-        private @Autowired(required = false) @Lazy JWKSet jwkSet;
-
-        @Override
-        public Object jwks() throws Exception {
-            return jwkSet.toPublicJWKSet().toJSONObject();
-        }
+    public Object jwks() throws Exception {
+        return jwkSet.toPublicJWKSet().toJSONObject();
     }
-
-    ///////////////////////////////////////
-    //
-    ///////////////////////////////////////  
-    public static class ClientBroker extends ResourceServer{
-        private ClientBroker(){}
-    }
-
-    ///////////////////////////////////////
-    //
-    ///////////////////////////////////////   
-    public static Builder resourceServer(){
-        return new Builder(new ResourceServer());
-    }
-
-    public static Builder clientBroker(){
-        return new Builder(new ClientBroker());
-    }
-
-    public static class Builder {
-        private OAuth2JwksEndpoint endpoint;
-        private Builder(OAuth2JwksEndpoint endpoint){
-            this.endpoint = endpoint;
-        }
-        public OAuth2JwksEndpoint build(){
-            return endpoint;
-        }
-    }
+    
 }

@@ -1,15 +1,15 @@
 package io.u2ware.common.oauth2.web;
 
+import java.io.IOException;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
@@ -20,208 +20,166 @@ import org.springframework.security.oauth2.client.web.AuthorizationRequestReposi
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
-import org.springframework.stereotype.Controller;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.web.util.WebUtils;
 
-import io.u2ware.common.oauth2.jose.JoseKeyEncryptor;
 import io.u2ware.common.oauth2.jwt.JwtGenerators;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-@Controller
-public abstract class OAuth2LogonEndpoint {
+// @Controller
+public class OAuth2LogonEndpoint implements AuthenticationSuccessHandler {
 
     protected final Log logger = LogFactory.getLog(getClass());
 
-    protected OAuth2LogonEndpoint(){}
+    private @Autowired(required = false) @Lazy ClientRegistrationRepository clientRegistrationRepository;
+    private @Autowired(required = false) @Lazy AuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository;
+    private @Autowired(required = false) @Lazy OAuth2AuthorizedClientService authorizedClientService;
+    private @Autowired(required = false) @Lazy JwtEncoder jwtEncoder;
 
-    @RequestMapping(value = "/oauth2/logon", method = {RequestMethod.GET, RequestMethod.POST})
+    // @RequestMapping(value = "/oauth2/logon2", method = {RequestMethod.GET, RequestMethod.POST})
     public @ResponseBody ResponseEntity<Object> oauth2Logon(HttpServletRequest request, Authentication authentication) {
 
-        if (authentication == null || ! authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
 
         MultiValueMap<String,String> parameters = parameters(request, authentication);
-        String callback = callback(request, authentication);
-        
         logger.info("\t[/oauth2/logon]: "+parameters);
+        String callback = callback(request, authentication);
+        logger.info("\t[/oauth2/logon]: "+callback);
+
 
         if(StringUtils.hasText(callback)) {
 
             UriComponents redirectUri = UriComponentsBuilder
                     .fromUriString(callback)
                     .queryParams(parameters)
-                    // .queryParam("username", principalName)
-                    // .queryParam("raw_info", userinfo)
-                    // .queryParam("raw_token", accessToken)
-                    // .queryParam("token_type", tokenType)
-                    // .queryParam("id_token", idToken)
                     .build();
+
 
             HttpHeaders headers = new HttpHeaders();
             headers.setLocation(redirectUri.toUri());
             return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY).headers(headers).build();
 
-
         }else{
 
             HttpHeaders headers = new HttpHeaders();
             headers.addAll(parameters);
-            // headers.add("username", principalName);
-            // headers.add("raw_info", userinfo);
-            // headers.add("raw_token", accessToken);
-            // headers.add("token_type", tokenType);
-            // headers.add("id_token", idToken);
+
             return ResponseEntity.status(HttpStatus.OK)
                     .contentType(MediaType.APPLICATION_JSON)
                     .headers(headers)
                     .body(headers);
         }
-    }
 
-    protected abstract MultiValueMap<String,String> parameters(HttpServletRequest request, Authentication authentication);
-    protected abstract String callback(HttpServletRequest request, Authentication authentication);
-    
+        
 
-
-    ///////////////////////////////////////
-    //
-    ///////////////////////////////////////
-    public static class ResourceServer extends OAuth2LogonEndpoint{
-
-        private ResourceServer(){}
-        private @Autowired(required = false) @Lazy JwtEncoder jwtEncoder;
-        private @Value("${spring.application.name}") String applicationName;
-
-        @Override
-        protected MultiValueMap<String, String> parameters(HttpServletRequest request, Authentication authentication) {
-
-            String principalName = authentication.getName();
-
-            Jwt jwt = JoseKeyEncryptor.encrypt(jwtEncoder, (claims)-> { 
-                claims.put("sub", principalName);
-                claims.put("email", principalName);
-                claims.put("name", principalName);
-                claims.put("nonce", applicationName);
-            });
-
-            String accessToken = jwt.getTokenValue();
-            String tokenType = "Bearer";
-            String idToken = jwt.getTokenValue();
-            String userinfo = ServletUriComponentsBuilder.fromContextPath(request)
-                            .path("/oauth2/userinfo").build().toUriString();
-
-
-            MultiValueMap<String,String> parameters = new LinkedMultiValueMap<>();
-            parameters.add("username", principalName);
-            parameters.add("raw_name", principalName);
-            parameters.add("raw_info", userinfo);
-            parameters.add("raw_token", accessToken);
-            parameters.add("token_type", tokenType);
-            parameters.add("id_token", idToken);
-            return parameters;
-        }
-        @Override
-        protected String callback(HttpServletRequest request, Authentication authentication) {
-            Object value = WebUtils.getSessionAttribute(request, "callback");
-            if(ObjectUtils.isEmpty(value)) return "";
-            return value.toString();
-        }
 
     }
 
-    ///////////////////////////////////////
-    //
-    ///////////////////////////////////////
-    public static class ClientBroker extends ResourceServer{
+    @Override
+    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
+            Authentication authentication) throws IOException, ServletException {
 
-        private ClientBroker(){}
+        // logger.info(request);
+        // logger.info(response);
+        // logger.info(authentication);
+        // logger.info("\t[/oauth2/logon]: "+clientRegistrationRepository);
+        // logger.info("\t[/oauth2/logon]: "+authorizationRequestRepository);
+        // logger.info("\t[/oauth2/logon]: "+authorizedClientService);
+        // logger.info("\t[/oauth2/logon]: "+jwtEncoder);
 
-        private @Autowired(required = false) ClientRegistrationRepository clientRegistrationRepository;
-        private @Autowired(required = false) AuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository;
-        private @Autowired(required = false) OAuth2AuthorizedClientService authorizedClientService;
-        private @Autowired(required = false) @Lazy JwtEncoder jwtEncoder;
+        // System.err.println("=================================");
+        // System.err.println("");
+        // System.err.println(authentication.getClass());
+        // System.err.println(authentication.getPrincipal().getClass());
+        // System.err.println("");
+        // System.err.println("=================================");
 
-        @Override
-        protected MultiValueMap<String, String> parameters(HttpServletRequest request, Authentication authentication) {
-
-            if(authentication instanceof UsernamePasswordAuthenticationToken) {
-                return super.parameters(request, authentication);
-            }
-
-            OAuth2AuthenticationToken oauth2AuthenticationToken = (OAuth2AuthenticationToken)authentication;// from authentication
-
-            String principalName = oauth2AuthenticationToken.getName();
-            String clientRegistrationId = oauth2AuthenticationToken.getAuthorizedClientRegistrationId();
-            ClientRegistration clientRegistration = clientRegistrationRepository.findByRegistrationId(clientRegistrationId);
-            OAuth2AuthorizedClient authorizedClient = authorizedClientService.loadAuthorizedClient(clientRegistrationId,
-                    principalName);
-
-            JwtGenerators jwtGenerator = JwtGenerators.of(clientRegistration.getRegistrationId());
-            Jwt jwt = jwtGenerator.generate(jwtEncoder, oauth2AuthenticationToken);
+        MultiValueMap<String,String> parameters = parameters(request, authentication);
+        logger.info("\t[/oauth2/logon]: "+parameters);
+        String callback = callback(request, authentication);
+        logger.info("\t[/oauth2/logon]: "+callback);
 
 
+        if(StringUtils.hasText(callback)) {
 
-            String userinfo = clientRegistration.getProviderDetails().getUserInfoEndpoint().getUri();
-            String tokenType = authorizedClient.getAccessToken().getTokenType().getValue();
-            String accessToken = authorizedClient.getAccessToken().getTokenValue();
-            String idToken = jwt.getTokenValue();
-            String name = jwt.getClaimAsString("name");
-            // logger.info("OAuth2 clientRegistration       : " + clientRegistration);
-            // logger.info("OAuth2 authorizedClient         : " + authorizedClient);
-            // logger.info("OAuth2 principalName            : " + principalName);
+            UriComponents redirectUri = UriComponentsBuilder
+                    .fromUriString(callback)
+                    .queryParams(parameters)
+                    .build();
 
 
-            MultiValueMap<String,String> parameters = new LinkedMultiValueMap<>();
-            parameters.add("username", principalName);
-            parameters.add("raw_name", name);
-            parameters.add("raw_info", userinfo);
-            parameters.add("raw_token", accessToken);
-            parameters.add("token_type", tokenType);
-            parameters.add("id_token", idToken);
-            return parameters;
-        }
+            response.sendRedirect(redirectUri.toUriString());
 
-        @Override
-        protected String callback(HttpServletRequest request, Authentication authentication) {
+        }else{
 
-            if(authentication instanceof UsernamePasswordAuthenticationToken) {
-                return super.callback(request, authentication);
-            }
-            OAuth2AuthorizationRequest authorizationRequest = authorizationRequestRepository
-                    .loadAuthorizationRequest(request);
-            return authorizationRequest != null ? authorizationRequest.getRedirectUri() : "";
+
+
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.addAll(parameters);
+
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            response.setStatus(200);
+            response.getWriter().println(headers);
+            response.getWriter().flush();
+            response.getWriter().close();
         }
     }
 
-    ///////////////////////////////////////
-    //
-    ///////////////////////////////////////    
-    public static Builder resourceServer(){
-        return new Builder(new ResourceServer());
+    protected MultiValueMap<String, String> parameters(HttpServletRequest request, Authentication authentication) {
+
+        OAuth2AuthenticationToken oauth2AuthenticationToken = (OAuth2AuthenticationToken) authentication;// from
+                                                                                                         // authentication
+
+        String principalName = oauth2AuthenticationToken.getName();
+        String clientRegistrationId = oauth2AuthenticationToken.getAuthorizedClientRegistrationId();
+        ClientRegistration clientRegistration = clientRegistrationRepository.findByRegistrationId(clientRegistrationId);
+        OAuth2AuthorizedClient authorizedClient = authorizedClientService.loadAuthorizedClient(clientRegistrationId,
+                principalName);
+
+
+
+        JwtGenerators jwtGenerator = JwtGenerators.of(clientRegistration.getRegistrationId());
+        Jwt jwt = jwtGenerator.generate(jwtEncoder, oauth2AuthenticationToken);
+
+        String userinfo = clientRegistration.getProviderDetails().getUserInfoEndpoint().getUri();
+        String tokenType = authorizedClient.getAccessToken().getTokenType().getValue();
+        String accessToken = authorizedClient.getAccessToken().getTokenValue();
+        String idToken = jwt.getTokenValue();
+        String name = jwt.getClaimAsString("name");
+
+        // logger.info("OAuth2 clientRegistration : " + clientRegistration);
+        // logger.info("OAuth2 authorizedClient : " + authorizedClient);
+        // logger.info("OAuth2 principalName : " + principalName);
+
+        MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();
+        parameters.add("username", principalName);
+        parameters.add("raw_name", name);
+        parameters.add("raw_info", userinfo);
+        parameters.add("raw_token", accessToken);
+        parameters.add("token_type", tokenType);
+        parameters.add("id_token", idToken);
+        return parameters;
     }
 
-    public static Builder clientBroker(){
-        return new Builder(new ClientBroker());
-    }
+    protected String callback(HttpServletRequest request, Authentication authentication) {
 
-    public static class Builder {
-        private OAuth2LogonEndpoint endpoint;
-        private Builder(OAuth2LogonEndpoint endpoint){
-            this.endpoint = endpoint;
-        }
-        public OAuth2LogonEndpoint build(){
-            return endpoint;
-        }
+        OAuth2AuthorizationRequest authorizationRequest = authorizationRequestRepository
+                .loadAuthorizationRequest(request);
+        String callback = authorizationRequest != null ? authorizationRequest.getRedirectUri() : "";
+        if(StringUtils.hasText(callback)) 
+            return callback;
+
+        Object value = WebUtils.getSessionAttribute(request, "callback");
+        if(ObjectUtils.isEmpty(value)) return "";
+        return value.toString();
     }
 }

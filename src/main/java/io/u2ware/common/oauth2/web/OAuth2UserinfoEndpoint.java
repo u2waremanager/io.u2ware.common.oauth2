@@ -1,6 +1,5 @@
 package io.u2ware.common.oauth2.web;
 
-
 import java.util.Enumeration;
 
 import org.apache.commons.logging.Log;
@@ -22,38 +21,42 @@ import io.u2ware.common.oauth2.jose.JoseKeyEncryptor;
 import jakarta.servlet.http.HttpServletRequest;
 
 @Controller
-public abstract class OAuth2UserinfoEndpoints {
+public class OAuth2UserinfoEndpoint {
 
     protected final Log logger = LogFactory.getLog(getClass());
 
-    protected OAuth2UserinfoEndpoints(){}
+    private @Autowired(required = false) @Lazy JwtDecoder jwtDecoder;
+    private @Autowired(required = false) @Lazy UserDetailsService userDetailsService;
 
-
-    @RequestMapping(value = "/oauth2/userinfo", method = {RequestMethod.GET})
+    @RequestMapping(value = "/oauth2/userinfo", method = { RequestMethod.GET })
     public @ResponseBody ResponseEntity<Object> oauth2UserInfo(HttpServletRequest request) {
 
         String token = extractHeaderToken(request);
         Jwt jwt = null;
-        try{
+        try {
             jwt = jwt(token);
-        }catch(Exception e){
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatusCode.valueOf(401)).build();
         }
 
-        try{
+        try {
             UserDetails user = userDetails(jwt);
-            logger.info("\t[/oauth2/userinfo]: "+user);
+            logger.info("\t[/oauth2/userinfo]: " + user);
             return ResponseEntity.ok(user);
 
-        }catch(Exception e){
-            logger.info("\t[/oauth2/userinfo]: "+jwt.getClaims());
+        } catch (Exception e) {
+            logger.info("\t[/oauth2/userinfo]: " + jwt.getClaims());
             return ResponseEntity.ok(jwt);
         }
     }
 
-    protected abstract Jwt jwt(String token)throws Exception;
-    protected abstract UserDetails userDetails(Jwt token)throws Exception;
+    protected Jwt jwt(String token) throws Exception {
+        return JoseKeyEncryptor.decrypt(jwtDecoder, () -> token);
+    }
 
+    protected UserDetails userDetails(Jwt token) throws Exception {
+        return userDetailsService.loadUserByUsername(token.getSubject());
+    }
 
     protected String extractHeaderToken(HttpServletRequest request) {
         Enumeration<String> headers = request.getHeaders("Authorization");
@@ -67,52 +70,4 @@ public abstract class OAuth2UserinfoEndpoints {
         return null;
     }
 
-
-    ///////////////////////////////////////
-    //
-    ///////////////////////////////////////
-    public static class ResourceServer extends OAuth2UserinfoEndpoints{
-        private ResourceServer(){}
-        private @Autowired(required = false) @Lazy JwtDecoder jwtDecoder;
-        private @Autowired(required = false) @Lazy UserDetailsService userDetailsService;
-
-        @Override
-        protected Jwt jwt(String token) throws Exception{
-            return JoseKeyEncryptor.decrypt(jwtDecoder, () -> token);
-        }
-
-        @Override
-        protected UserDetails userDetails(Jwt token) throws Exception {
-            return userDetailsService.loadUserByUsername(token.getSubject());
-        }
-    }
-
-    ///////////////////////////////////////
-    //
-    ///////////////////////////////////////
-    public static class ClientBroker extends ResourceServer{
-
-    }
-
-    ///////////////////////////////////////
-    //
-    ///////////////////////////////////////    
-    public static Builder resourceServer(){
-        return new Builder(new ResourceServer());
-    }
-
-    public static Builder clientBroker(){
-        return new Builder(new ClientBroker());
-    }
-
-    public static class Builder {
-        private OAuth2UserinfoEndpoints endpoint;
-        private Builder(OAuth2UserinfoEndpoints endpoint){
-            this.endpoint = endpoint;
-        }
-        public OAuth2UserinfoEndpoints build(){
-            return endpoint;
-        }
-    }
 }
-

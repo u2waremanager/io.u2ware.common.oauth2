@@ -13,9 +13,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @Controller
 public class OAuth2LogoffEndpoint {
     
-
     protected final Log logger = LogFactory.getLog(getClass());
-    protected OAuth2LogoffEndpoint(){}
     
     @RequestMapping("/oauth2/logoff")
     public @ResponseBody ResponseEntity<Object> oauth2Logoff(){
@@ -26,37 +24,4 @@ public class OAuth2LogoffEndpoint {
         return ResponseEntity.ok(response);
     }
 
-    ///////////////////////////////////////
-    //
-    ///////////////////////////////////////
-    public static class ResourceServer extends OAuth2LogoffEndpoint{
-        private ResourceServer(){}
-    }
-
-    ///////////////////////////////////////
-    //
-    ///////////////////////////////////////  
-    public static class ClientBroker extends ResourceServer{
-        private ClientBroker(){}
-    }    
-    ///////////////////////////////////////
-    //
-    ///////////////////////////////////////   
-    public static Builder resourceServer(){
-        return new Builder(new ResourceServer());
-    }
-
-    public static Builder clientBroker(){
-        return new Builder(new ClientBroker());
-    }
-
-    public static class Builder {
-        private OAuth2LogoffEndpoint endpoint;
-        private Builder(OAuth2LogoffEndpoint endpoint){
-            this.endpoint = endpoint;
-        }
-        public OAuth2LogoffEndpoint build(){
-            return endpoint;
-        }
-    }
 }

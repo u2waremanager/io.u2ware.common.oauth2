@@ -16,11 +16,9 @@ import jakarta.servlet.http.HttpServletRequest;
 
 
 @Controller
-public abstract class OAuth2LogoutEndpoint {
+public class OAuth2LogoutEndpoint {
 
     protected final Log logger = LogFactory.getLog(getClass());
-
-    protected OAuth2LogoutEndpoint(){}
 
 
     @RequestMapping(value = "/oauth2/logout", method = {RequestMethod.GET})
@@ -36,37 +34,5 @@ public abstract class OAuth2LogoutEndpoint {
     }
 
 
-    ///////////////////////////////////////
-    //
-    ///////////////////////////////////////
-    public static class ResourceServer extends OAuth2LogoutEndpoint{
-    }
-
-    ///////////////////////////////////////
-    //
-    ///////////////////////////////////////
-    public static class ClientBroker extends ResourceServer{
-    }
-
-    ///////////////////////////////////////
-    //
-    ///////////////////////////////////////    
-    public static Builder resourceServer(){
-        return new Builder(new ResourceServer());
-    }
-
-    public static Builder clientBroker(){
-        return new Builder(new ClientBroker());
-    }
-
-    public static class Builder {
-        private OAuth2LogoutEndpoint endpoint;
-        private Builder(OAuth2LogoutEndpoint endpoint){
-            this.endpoint = endpoint;
-        }
-        public OAuth2LogoutEndpoint build(){
-            return endpoint;
-        }
-    }
 
 }
