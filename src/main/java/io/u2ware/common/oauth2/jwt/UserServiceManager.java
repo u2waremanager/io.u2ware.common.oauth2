@@ -38,16 +38,18 @@ public class UserServiceManager implements UserDetailsService{
 
         }
 
-
-
+        if(this.sp == null) {
+            throw new UsernameNotFoundException("User not found: " + username);
+        }
+        
         String rootUser = this.sp.getUser().getName();
         if(! rootUser.equals(username)) {
             throw new UsernameNotFoundException("User not found: " + username);
         }        
 
+
         String password = this.sp.getUser().getPassword();
         String rootPassword = passwordEncoder != null ? passwordEncoder.encode(password) : "{noop}"+password;
-
         UserDetails userDetails = User.builder()
             .username(rootUser)
             .password(rootPassword)
