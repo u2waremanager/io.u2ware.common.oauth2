@@ -78,6 +78,11 @@ public class SimpleJwtCodec implements JwtDecoder , JwtEncoder{
     }
 
 
+    public boolean available(){
+        return decoders.size() > 1;
+    }
+
+
     private JwtEncoder jwtEncoder(Collection<JwtEncoder> encoders, JWKSource<SecurityContext> jwkSource){
         try{
             JwtEncoder encoder = JoseKeyCodec.encoder(jwkSource);
