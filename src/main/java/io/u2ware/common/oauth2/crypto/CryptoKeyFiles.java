@@ -54,7 +54,23 @@ public class CryptoKeyFiles {
     };
 
 
+    public static StringBuilder writeRSAPublicKey(KeyPair key) throws Exception{
+        String keyString = base64Converter.convert(key.getPublic().getEncoded());
+        StringBuilder sb = new StringBuilder();
+        sb.append("-----BEGIN PUBLIC KEY-----\n");
+        sb.append(keyString);
+        sb.append("-----END PUBLIC KEY-----\n");
+        return sb;
+    }    
 
+    public static StringBuilder writeRSAPrivateKey(KeyPair key) throws Exception{
+        String keyString = base64Converter.convert(key.getPrivate().getEncoded());
+        StringBuilder sb = new StringBuilder();
+        sb.append("-----BEGIN PRIVATE KEY-----\n");
+        sb.append(keyString);
+        sb.append("-----END PRIVATE KEY-----\n");
+        return sb;
+    }   
 
 
     public static RSAPublicKey readRSAPublicKey(Path path) throws Exception{
@@ -62,12 +78,8 @@ public class CryptoKeyFiles {
         return rsaPublicKeyConverter.convert(bytes);
     }
     public static Path writeRSAPublicKey(Path path, KeyPair key) throws Exception{
-        String keyString = base64Converter.convert(key.getPublic().getEncoded());
-        StringBuilder sb = new StringBuilder();
-        sb.append("-----BEGIN PUBLIC KEY-----\n");
-        sb.append(keyString);
-        sb.append("-----END PUBLIC KEY-----\n");
-        return Files.writeString(path, sb);
+        StringBuilder keyString = writeRSAPublicKey(key);
+        return Files.writeString(path, keyString);
     }
 
     public static RSAPrivateKey readRSAPrivateKey(Path path) throws Exception{
@@ -75,12 +87,8 @@ public class CryptoKeyFiles {
         return rsaPrivateKeyConverter.convert(bytes);
     }
     public static Path writeRSAPrivateKey(Path path, KeyPair key) throws Exception{
-        String keyString = base64Converter.convert(key.getPrivate().getEncoded());
-        StringBuilder sb = new StringBuilder();
-        sb.append("-----BEGIN PRIVATE KEY-----\n");
-        sb.append(keyString);
-        sb.append("-----END PRIVATE KEY-----\n");
-        return Files.writeString(path, sb);
+        StringBuilder keyString = writeRSAPrivateKey(key);
+        return Files.writeString(path, keyString);
     }
 
 

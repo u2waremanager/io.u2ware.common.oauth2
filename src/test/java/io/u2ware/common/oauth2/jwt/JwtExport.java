@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 
+import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
@@ -30,17 +31,28 @@ public class JwtExport {
 
         RSAKey rsaKey = JoseKeyGenerator.generateRsa();
         JWKSource<SecurityContext> jwkSource = JoseKeyCodec.source(rsaKey);
+        JWKSet jwkSet = JoseKeyCodec.jwk(jwkSource);
         NimbusJwtEncoder encoder = JoseKeyCodec.encoder(jwkSource);
         // NimbusJwtDecoder decoder = JoseKeyCodec.decoder(jwkSource);
 
+
+        System.out.println("1: "+jwkSet);
+        System.out.println("2: "+jwkSet.toPublicJWKSet());
+        System.out.println("3: "+jwkSet.getKeys().size());
 
 
         Path pem = Paths.get("target/public.pem");
         Path token = Paths.get("target/public.txt");
         CryptoKeyFiles.writeRSAPublicKey(pem, rsaKey.toKeyPair());
-
-
         System.out.println(Files.readString(pem));
+
+        RSAKey rsaKey2 = (RSAKey)jwkSet.getKeys().get(0);
+        Path pem2 = Paths.get("target/public2.pem");
+        CryptoKeyFiles.writeRSAPublicKey(pem2, rsaKey2.toKeyPair());
+        System.out.println(Files.readString(pem2));
+
+
+
 
         Files.writeString(token, "", StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         for(int i=0; i<=5; i++) {
