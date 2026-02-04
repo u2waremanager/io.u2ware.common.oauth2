@@ -52,7 +52,11 @@ public class UserinfoEndpoint {
 
         }catch(Exception e){
             logger.info("\t[/oauth2/userinfo]: "+e.getMessage());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            Map<String, String> error = Map.of(
+                "username", "Anonymous",
+                "error", e.getMessage()
+            );
+            return ResponseEntity.ok(error);
         }
     }
 }
