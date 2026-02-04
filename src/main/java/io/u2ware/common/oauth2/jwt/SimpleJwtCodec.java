@@ -87,6 +87,7 @@ public class SimpleJwtCodec implements JwtDecoder , JwtEncoder{
         try{
             JwtEncoder encoder = JoseKeyCodec.encoder(jwkSource);
             encoders.add(encoder);
+            logger.info("jwtEncoder from JWKSource");
             return encoder;
         }catch(Exception e){
             logger.warn("", e);
@@ -98,6 +99,7 @@ public class SimpleJwtCodec implements JwtDecoder , JwtEncoder{
         try{
             JwtDecoder decoder = JoseKeyCodec.decoder(jwkSource);
             decoders.add(decoder);
+            logger.info("JwtDecoder from JWKSource");
             return decoder;
         }catch(Exception e){
             logger.warn("", e);
@@ -109,15 +111,21 @@ public class SimpleJwtCodec implements JwtDecoder , JwtEncoder{
         try{
             Resource publicKeyLocation = properties.getJwt().getPublicKeyLocation();
             String jwkSetUri = properties.getJwt().getJwkSetUri();
+            JwtDecoder decoder = null;
             if(! ObjectUtils.isEmpty(publicKeyLocation)) {
                 Path path = Path.of(publicKeyLocation.getURI());
                 RSAPublicKey publicKey = CryptoKeyFiles.readRSAPublicKey(path);
-                decoders.add(NimbusJwtDecoder.withPublicKey(publicKey).build());
+
+                decoder = NimbusJwtDecoder.withPublicKey(publicKey).build();
+                logger.info("JwtDecoder from PublicKeyLocation "+publicKeyLocation);
+                decoders.add(decoder);
             }
             if(! ObjectUtils.isEmpty(jwkSetUri)) {
-                decoders.add(NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build());
+                decoder= NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
+                logger.info("JwtDecoder from JwkSetUri "+jwkSetUri);
+                decoders.add(decoder);
             }
-            return null;
+            return decoder;
         }catch(Exception e){
             logger.warn("", e);
             return null;
