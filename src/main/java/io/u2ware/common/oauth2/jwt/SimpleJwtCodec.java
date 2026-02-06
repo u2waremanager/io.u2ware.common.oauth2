@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.security.interfaces.RSAPublicKey;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Enumeration;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -23,6 +24,7 @@ import com.nimbusds.jose.proc.SecurityContext;
 import io.u2ware.common.oauth2.crypto.CryptoKeyFiles;
 import io.u2ware.common.oauth2.jose.JoseKeyCodec;
 import io.u2ware.common.oauth2.jose.JoseKeyGenerator;
+import jakarta.servlet.http.HttpServletRequest;
 
 public class SimpleJwtCodec implements JwtDecoder , JwtEncoder{
 
@@ -155,4 +157,19 @@ public class SimpleJwtCodec implements JwtDecoder , JwtEncoder{
         }
         throw new RuntimeException("SimpleJwtCodec encode fail");
     }   
+
+
+    public static String extractHeaderToken(HttpServletRequest request) {
+        Enumeration<String> headers = request.getHeaders("Authorization");
+        while (headers.hasMoreElements()) { // typically there is only one (most servers enforce that)
+            String value = headers.nextElement();
+            if ((value.toLowerCase().startsWith("Bearer".toLowerCase()))) {
+                String authHeaderValue = value.substring("Bearer".length()).trim();
+                return authHeaderValue;
+            }
+        }
+        return null;
+    }
+
+
 }

@@ -20,4 +20,12 @@ public class SimpleJwtGrantedAuthoritiesConverter implements Converter<Jwt, Coll
     public Collection<GrantedAuthority> convert(Jwt jwt) {
        return converter.convert(jwt);
     }
+
+
+    private static SimpleJwtGrantedAuthoritiesConverter c = new SimpleJwtGrantedAuthoritiesConverter();
+
+    public static Collection<GrantedAuthority> authorities(Jwt jwt){
+        return c.convert(jwt);
+    }
+
 }
