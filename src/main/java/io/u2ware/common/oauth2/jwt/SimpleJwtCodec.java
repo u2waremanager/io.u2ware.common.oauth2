@@ -10,6 +10,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.OAuth2ResourceServerProperties;
 import org.springframework.core.io.Resource;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
@@ -17,6 +18,7 @@ import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.security.oauth2.jwt.JwtEncodingException;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.util.ObjectUtils;
+import org.springframework.web.client.RestClient;
 
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
@@ -113,8 +115,21 @@ public class SimpleJwtCodec implements JwtDecoder , JwtEncoder{
                 decoders.add(decoder);
             }
             if(! ObjectUtils.isEmpty(jwkSetUri)) {
+
                 decoder= NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
                 logger.info("JwtDecoder from JwkSetUri "+jwkSetUri);
+
+                RestClient restClient = RestClient.create();
+                String s = restClient.get()
+                    .uri(jwkSetUri)
+                    .retrieve()
+                    .body(String.class);
+                    ;
+                // logger.info(uri+" "+ s.getStatusCode());
+                logger.info(s);
+
+
+
                 decoders.add(decoder);
             }
             return decoder;
