@@ -30,17 +30,7 @@ public class SimpleJwtCodec implements JwtDecoder , JwtEncoder{
 
 	protected Log logger = LogFactory.getLog(getClass());
 
-    public static boolean available(OAuth2ResourceServerProperties properties){
-        Resource publicKeyLocation = properties.getJwt().getPublicKeyLocation();
-        String jwkSetUri = properties.getJwt().getJwkSetUri();
-        if(! ObjectUtils.isEmpty(publicKeyLocation)) {
-            return true;
-        }
-        if(! ObjectUtils.isEmpty(jwkSetUri)) {
-            return true;
-        }        
-        return false;
-    }
+
 
     private static JWKSource<SecurityContext> testSource;
     static {
