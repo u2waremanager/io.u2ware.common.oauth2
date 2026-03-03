@@ -25,6 +25,7 @@ public class CryptoKeyEncryptorTests {
     }
 
 
+    
 	@Test
     public void context2Loads() throws Exception {
 
@@ -74,4 +75,27 @@ public class CryptoKeyEncryptorTests {
 		logger.info(decrypt2);   
 
     }
+
+    @Test   
+    public void context4Load() throws Exception {
+
+        KeyPair keyPair1 = CryptoKeyGenerator.generateRsa();
+        logger.info("keyPair1: " + keyPair1);
+
+        KeyPair keyPair2 = CryptoKeyGenerator.generateRsa();
+        logger.info("keyPair2: " + keyPair2);
+
+
+        String encrypted = CryptoKeyEncryptor.encrypt(keyPair1.getPrivate(), "hello world");
+        logger.info("encrypted: " + encrypted);
+
+        try {
+            String decrypted = CryptoKeyEncryptor.decrypt(keyPair2.getPublic(), encrypted);
+            logger.info("decrypted: " + decrypted);
+        } catch (Exception e) {
+            logger.info("decrypted error: " + e.getMessage());
+        }
+
+    }
+
 }

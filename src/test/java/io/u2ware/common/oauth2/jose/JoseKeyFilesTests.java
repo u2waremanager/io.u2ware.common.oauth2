@@ -2,6 +2,8 @@ package io.u2ware.common.oauth2.jose;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 
@@ -17,11 +19,17 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 
+import ch.qos.logback.classic.Logger;
+import io.u2ware.common.oauth2.crypto.CryptoKeyEncryptor;
 import io.u2ware.common.oauth2.crypto.CryptoKeyFiles;
 
 public class JoseKeyFilesTests {
     
     private Log logger = LogFactory.getLog(getClass());
+
+// private static final Logger log = LoggerFactory.getLogger(LogSample.class);
+
+    // private final Logger logger = Logger.g;//LoggerFactory.getLogger(this.getClass());
 
 
 
@@ -116,7 +124,74 @@ public class JoseKeyFilesTests {
 
     }
 
+	@Test
+    public void context3Loads() throws Exception {
+
+        RSAKey rsaKey = JoseKeyGenerator.generateRsa();
+
+        Path p1 = Paths.get("target/key1.json");
+        Path p2 = Paths.get("target/key1.json");
+        JoseKeyFiles.writeRSAPrivateKey(p1, rsaKey);
+        JoseKeyFiles.writeRSAPublicKey(p2, rsaKey);
+
+
+        // org.springframework.boot.logging.logback
+
+        // RSAKey rsaKey11 = JoseKeyFiles.readRSAPrivateKey(p1);
+        // RSAKey rsaKey12 = JoseKeyFiles.readRSAPublicKey(p1);
+
+        // RSAKey rsaKey21 = JoseKeyFiles.readRSAPrivateKey(p2);
+        // RSAKey rsaKey22 = JoseKeyFiles.readRSAPublicKey(p2);
 
 
 
+
+        // PrivateKey pri = rsaKey.toPrivateKey();
+        // PublicKey pub = rsaKey.toPublicKey();
+
+        // String encrypted1 = CryptoKeyEncryptor.encrypt(pri, "hello world");
+        // logger.info(encrypted1);
+
+        // String decrypted1 = CryptoKeyEncryptor.decrypt(pub, encrypted1);
+        // logger.info(decrypted1);
+
+
+
+        // String encrypted2 = CryptoKeyEncryptor.encrypt(pub, "hello world22");
+        // logger.info(encrypted2);
+
+        // String decrypted2 = CryptoKeyEncryptor.decrypt(pri, encrypted2);
+        // logger.info(decrypted2);
+
+
+        // assertThat(true, JoseKeyCodec.source(rsaKey11));
+        // assertThat(true, JoseKeyCodec.source(rsaKey12));
+        // assertThat(false, JoseKeyCodec.source(rsaKey21));
+    }
+
+
+
+    private void assertThat(boolean actual, JWKSource<SecurityContext> jwkSource) throws Exception{
+
+        try{
+            NimbusJwtEncoder encoder = JoseKeyCodec.encoder(jwkSource);
+            NimbusJwtDecoder decoder = JoseKeyCodec.decoder(jwkSource);
+
+
+            Jwt jwt1 = JoseKeyEncryptor.encrypt(encoder, (claims)->{claims.put("hello", "world");});
+            logger.info(jwt1);
+            logger.info(jwt1.getTokenValue());
+
+
+            Jwt jwt2 = JoseKeyEncryptor.decrypt(decoder, () -> jwt1.getTokenValue());
+            logger.info(jwt2);
+            logger.info(jwt2.getTokenValue());
+
+            Assertions.assertThat(jwt2.getTokenValue()).isEqualTo(jwt2.getTokenValue());
+
+        }catch(Exception e) {
+            e.printStackTrace();
+            Assertions.assertThat(false);
+        }
+    }
 }
