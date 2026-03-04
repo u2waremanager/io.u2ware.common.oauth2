@@ -2,6 +2,7 @@ package io.u2ware.common.oauth2.jose;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.interfaces.RSAPrivateKey;
@@ -146,8 +147,8 @@ public class JoseKeyFilesTests {
 
 
 
-        // PrivateKey pri = rsaKey.toPrivateKey();
-        // PublicKey pub = rsaKey.toPublicKey();
+        PrivateKey pri = rsaKey.toPrivateKey();
+        PublicKey pub = rsaKey.toPublicKey();
 
         // String encrypted1 = CryptoKeyEncryptor.encrypt(pri, "hello world");
         // logger.info(encrypted1);
@@ -194,4 +195,46 @@ public class JoseKeyFilesTests {
             Assertions.assertThat(false);
         }
     }
+
+
+	// @Test
+    // public void context4Loads() throws Exception {
+
+    //     RSAKey rsaKey = JoseKeyGenerator.generateRsa();
+    //     String a = create(rsaKey);
+    //     logger.info(a);
+
+    //     boolean valid = isValid(rsaKey, a);
+    //     logger.info(valid);
+    // }
+
+
+    // public String create(RSAKey rsaKey) throws Exception {
+    //     String orginLicense = rsaKey.toJSONObject().get("kid").toString();
+
+    //     // KeyPair keyPair = rsaKey.toKeyPair();
+    //     // PrivateKey privateKey = rsaKey.toPrivateKey();
+    //     PublicKey publicKey = rsaKey.toPublicKey();
+        
+    //     String encryptedLicense = CryptoKeyEncryptor.encrypt(publicKey, orginLicense);
+    //     return encryptedLicense;
+    // }
+
+    // public boolean isValid(RSAKey rsaKey,String encryptedLicense) throws Exception {
+    //     try{
+    //         String orginLicense = rsaKey.toJSONObject().get("kid").toString();
+
+    //         // KeyPair keyPair = rsaKey.toKeyPair();
+    //         PrivateKey privateKey = rsaKey.toPrivateKey();
+    //         // PublicKey publicKey = rsaKey.toPublicKey();
+
+    //         String decryptedLicense = CryptoKeyEncryptor.decrypt(privateKey, encryptedLicense);
+    //         return decryptedLicense.equals(orginLicense.toString());
+
+    //     }catch(Exception e){
+    //         return false;
+    //     }
+    // }
+
+
 }

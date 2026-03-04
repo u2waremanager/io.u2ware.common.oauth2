@@ -1,5 +1,7 @@
 package io.u2ware.common.oauth2.jose;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -29,5 +31,36 @@ public class JoseKeyEncryptor {
             token = token.substring("Bearer".length()).trim();
         }
         return decoder.decode(token);
+    }
+
+
+
+    public static class Builder {
+
+        private JwtEncoder encoder;
+        private List<Consumer<Map<String, Object>>> consumers = new ArrayList<>();
+
+        private Builder(JwtEncoder encoder) {
+            this.encoder = encoder;
+        }
+
+        public static Builder with(JwtEncoder encoder){
+            return new Builder(encoder);
+        }
+
+        public Builder claims(Consumer<Map<String, Object>> consumer){
+            this.consumers.add(consumer);
+            return this;
+        }
+
+        public Jwt build(){
+            JwtClaimsSet claims = JwtClaimsSet.builder().claims((c)->{
+                consumers.forEach(consumer -> consumer.accept(c));
+            }).build();
+            
+            JwsHeader jwsHeader = JwsHeader.with(SignatureAlgorithm.RS256).build();
+            JwtEncoderParameters jwtEncoderParameters = JwtEncoderParameters.from(jwsHeader, claims);
+            return encoder.encode(jwtEncoderParameters);
+        }
     }
 }

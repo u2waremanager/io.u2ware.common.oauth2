@@ -22,6 +22,8 @@ public class CryptoKeyEncryptorTests {
 
 		String encrypt2 = CryptoKeyEncryptor.encrypt("SHA-256", "helloworld");
 		logger.info(encrypt2);
+
+		logger.info(encrypt2.equals(encrypt1));
     }
 
 
