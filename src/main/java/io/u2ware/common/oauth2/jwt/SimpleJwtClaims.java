@@ -19,12 +19,12 @@ public enum SimpleJwtClaims {
     at_hash("[Access Token Hash] 액세스 토큰(access_token) 해시"),
     c_hash("[Access Code Hash] 인증 코드(code) 해시"),
 
+    // Additional Claims
     provider(""),
     id(""),
     name(""),
     email(""),
     principal(""),
-
     authorities("")
     ;
 

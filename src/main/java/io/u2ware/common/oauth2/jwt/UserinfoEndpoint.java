@@ -1,5 +1,6 @@
 package io.u2ware.common.oauth2.jwt;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -34,17 +35,21 @@ public class UserinfoEndpoint {
                 throw new NullPointerException("authentication is null");
             }
             @SuppressWarnings("unchecked")
-            Map<String, Object> response = mapper.convertValue(authentication, Map.class);
+            Map<String, Object> authentications = mapper.convertValue(authentication, Map.class);
 
 
             List<String> authorities = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority).collect(Collectors.toList());
 
             Jwt jwt = (Jwt)authentication.getPrincipal();
-            String username = jwt.getClaimAsString("name");
+            String username = jwt.getSubject();
 
+
+            Map<String, Object> response = new HashMap<>();
             response.put("username", username);
             response.put("authorities", authorities);
+            response.put("x", authentications);
+
 
             logger.info("\t[/oauth2/userinfo]: Done.");
             return ResponseEntity.ok(response);
