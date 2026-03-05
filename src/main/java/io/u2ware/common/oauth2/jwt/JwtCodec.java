@@ -27,7 +27,7 @@ import io.u2ware.common.oauth2.jose.JoseKeyCodec;
 import io.u2ware.common.oauth2.jose.JoseKeyGenerator;
 import jakarta.servlet.http.HttpServletRequest;
 
-public class SimpleJwtCodec implements JwtDecoder , JwtEncoder{
+public class JwtCodec implements JwtDecoder , JwtEncoder{
 
 	protected Log logger = LogFactory.getLog(getClass());
 
@@ -46,14 +46,14 @@ public class SimpleJwtCodec implements JwtDecoder , JwtEncoder{
     private Collection<JwtEncoder> encoders = new ArrayList<>();
 
     //For auth server
-    public SimpleJwtCodec(JWKSource<SecurityContext> jwkSource){
+    public JwtCodec(JWKSource<SecurityContext> jwkSource){
         this.jwtDecoder(decoders, jwkSource);
         logger.info("JwtDecoders: "+decoders);
         logger.info("JwtEncoders: "+encoders);
     }
 
     //For resource server
-    public SimpleJwtCodec(OAuth2ResourceServerProperties properties){
+    public JwtCodec(OAuth2ResourceServerProperties properties){
         this.jwtDecoder(decoders, properties);
         this.jwtDecoder(decoders, testSource);
         this.jwtEncoder(encoders, testSource);
@@ -62,7 +62,7 @@ public class SimpleJwtCodec implements JwtDecoder , JwtEncoder{
     }
 
     //For resource server self auth
-    public SimpleJwtCodec(JWKSource<SecurityContext> jwkSource, OAuth2ResourceServerProperties properties){
+    public JwtCodec(JWKSource<SecurityContext> jwkSource, OAuth2ResourceServerProperties properties){
         this.jwtDecoder(decoders, jwkSource);
         this.jwtDecoder(decoders, properties);
         this.jwtEncoder(encoders, jwkSource);

@@ -1,32 +1,28 @@
-package io.u2ware.common.oauth2.jwt;
+package io.u2ware.common.oauth2.security;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import jakarta.servlet.http.HttpServletRequest;
 
 @Controller
-public class UserinfoEndpoint {
+public class OAuth2ResourceServerUserinfoEndpoint {
 
     protected final Log logger = LogFactory.getLog(getClass());
 
-    private @Autowired ObjectMapper mapper;
+    private @Autowired(required = false) SimpleJwtAuthenticationMapper mapper;
+
+    private SimpleJwtAuthenticationMapper sample;
 
     @RequestMapping(value = "/oauth2/userinfo", method = { RequestMethod.GET })
     public @ResponseBody ResponseEntity<Object> oauth2UserInfo(HttpServletRequest request, Authentication authentication) {
@@ -34,26 +30,24 @@ public class UserinfoEndpoint {
             if(authentication == null) {
                 throw new NullPointerException("authentication is null");
             }
+            if(! (authentication instanceof JwtAuthenticationToken)) {
+                throw new NullPointerException("authentication is not JWT");
+            }
 
-            Jwt jwt = (Jwt)authentication.getPrincipal();
-            String subject = jwt.getSubject();
-            String username = jwt.getClaimAsString(SimpleJwtClaims.provider_user.name());
+            logger.info("UserinfoToken : "+authentication);
+            logger.info("UserinfoToken : "+authentication.getClass());
 
+            JwtAuthenticationToken token = (JwtAuthenticationToken)authentication;
 
-            List<String> authorities = authentication.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority).collect(Collectors.toList());
-
-
-            @SuppressWarnings("unchecked")
-            Map<String, Object> origin = mapper.convertValue(authentication, Map.class);
-
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("subject", subject);
-            response.put("username", username);
-            response.put("authorities", authorities);
-            response.put("origin", origin);
-
+            Map<String,Object> response = null;
+            if(mapper != null) {
+                response = mapper.map(token);
+            }else{
+                if(sample == null) {
+                    sample = new SimpleJwtAuthenticationMapper.Default();
+                }
+                response = sample.map(token);
+            }
 
             logger.info("\t[/oauth2/userinfo]: Done.");
             return ResponseEntity.ok(response);

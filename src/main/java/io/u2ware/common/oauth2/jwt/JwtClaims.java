@@ -1,6 +1,6 @@
 package io.u2ware.common.oauth2.jwt;
 
-public enum SimpleJwtClaims {
+public enum JwtClaims {
 
     iss("(Issuer): 토큰 발급자. http://..."),
     sub("(Subject): 토큰 제목 (일반적으로 사용자 ID 등 고유 식별자)"),
@@ -32,7 +32,7 @@ public enum SimpleJwtClaims {
     ;
 
     private String description;
-    SimpleJwtClaims(String description){
+    JwtClaims(String description){
         this.description = description;           
     }
     public String toString(){

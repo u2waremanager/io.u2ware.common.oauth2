@@ -1,4 +1,4 @@
-package io.u2ware.common.oauth2.jwt;
+package io.u2ware.common.oauth2.security;
 
 import org.springframework.boot.autoconfigure.security.oauth2.resource.OAuth2ResourceServerProperties;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;

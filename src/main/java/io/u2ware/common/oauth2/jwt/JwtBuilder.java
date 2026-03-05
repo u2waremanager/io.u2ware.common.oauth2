@@ -11,21 +11,21 @@ import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 
 
-public class SimpleJwtBuilder {
+public class JwtBuilder {
  
-    public static SimpleJwtBuilder with(JwtEncoder jwtEncoder) {
-        return new SimpleJwtBuilder(jwtEncoder);
+    public static JwtBuilder with(JwtEncoder jwtEncoder) {
+        return new JwtBuilder(jwtEncoder);
     }
 
     private JwtEncoder jwtEncoder;
     private JwtClaimsSet.Builder claimsBuilder = JwtClaimsSet.builder();
 
 
-    private SimpleJwtBuilder(JwtEncoder jwtEncoder) {
+    private JwtBuilder(JwtEncoder jwtEncoder) {
         this.jwtEncoder = jwtEncoder;
     }
 
-    public SimpleJwtBuilder claims(Consumer<Map<String, Object>> claimsConsumer) {
+    public JwtBuilder claims(Consumer<Map<String, Object>> claimsConsumer) {
         claimsBuilder.claims(claimsConsumer);
         return this;
     }

@@ -46,15 +46,15 @@ public class JwtClaimsTests {
 
 
 
-            claims.put(SimpleJwtClaims.jti.name(), UUID.randomUUID().toString());
-            claims.put(SimpleJwtClaims.sub.name(), "user01");
+            claims.put(JwtClaims.jti.name(), UUID.randomUUID().toString());
+            claims.put(JwtClaims.sub.name(), "user01");
 
 
             Instant iat = Instant.now().truncatedTo(ChronoUnit.SECONDS);
             Instant exp = iat.plus(1, ChronoUnit.SECONDS);
 
-            claims.put(SimpleJwtClaims.iat.name(), Date.from(iat));
-            claims.put(SimpleJwtClaims.exp.name(), Date.from(exp));
+            claims.put(JwtClaims.iat.name(), Date.from(iat));
+            claims.put(JwtClaims.exp.name(), Date.from(exp));
         });
         System.out.println("jwt1: "+jwt1.getTokenValue());
         System.out.println("jwt1: "+mapper.writerWithDefaultPrettyPrinter().writeValueAsString(jwt1));
