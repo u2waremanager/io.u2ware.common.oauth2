@@ -34,21 +34,25 @@ public class UserinfoEndpoint {
             if(authentication == null) {
                 throw new NullPointerException("authentication is null");
             }
-            @SuppressWarnings("unchecked")
-            Map<String, Object> authentications = mapper.convertValue(authentication, Map.class);
+
+            Jwt jwt = (Jwt)authentication.getPrincipal();
+            String subject = jwt.getSubject();
+            String username = jwt.getClaimAsString(SimpleJwtClaims.provider_user.name());
 
 
             List<String> authorities = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority).collect(Collectors.toList());
 
-            Jwt jwt = (Jwt)authentication.getPrincipal();
-            String username = jwt.getSubject();
+
+            @SuppressWarnings("unchecked")
+            Map<String, Object> origin = mapper.convertValue(authentication, Map.class);
 
 
             Map<String, Object> response = new HashMap<>();
+            response.put("subject", subject);
             response.put("username", username);
             response.put("authorities", authorities);
-            response.put("x", authentications);
+            response.put("origin", origin);
 
 
             logger.info("\t[/oauth2/userinfo]: Done.");

@@ -20,11 +20,14 @@ public enum SimpleJwtClaims {
     c_hash("[Access Code Hash] 인증 코드(code) 해시"),
 
     // Additional Claims
-    provider(""),
-    id(""),
-    name(""),
-    email(""),
-    principal(""),
+    provider("공급자"), //  
+    provider_sub("공급자가 제공하는 사용자 이름"), //  
+    provider_user("공급자가 제공하는 사용자 이름"), //  
+    provider_mail("공급자가 제공하는 이메일"), //  
+    provider_origin("공급자가 원본"),
+
+    
+    //Jwt 
     authorities("")
     ;
 
@@ -35,5 +38,21 @@ public enum SimpleJwtClaims {
     public String toString(){
         return name()+" "+description;
     }
+
+
+    // public static enum Provider {
+    //     id("공급자 id"),
+    //     subject("공급자 sub"), // 
+    //     origin("공급자 원본"),
+    //     ;
+
+    //     private String description;
+    //     Provider(String description){
+    //         this.description = description;           
+    //     }
+    //     public String toString(){
+    //         return name()+" "+description;
+    //     }        
+    // }
 
 }
