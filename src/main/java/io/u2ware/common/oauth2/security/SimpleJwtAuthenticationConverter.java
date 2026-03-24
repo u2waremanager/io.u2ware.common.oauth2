@@ -12,11 +12,16 @@ public class SimpleJwtAuthenticationConverter extends JwtAuthenticationConverter
     // private JwtAuthenticationConverter converter;
 
     public SimpleJwtAuthenticationConverter(){
-        this(new SimpleJwtGrantedAuthoritiesConverter());
+        super();
+        super.setJwtGrantedAuthoritiesConverter(new SimpleJwtGrantedAuthoritiesConverter());
     }
     public SimpleJwtAuthenticationConverter(Converter<Jwt, Collection<GrantedAuthority>> jwtGrantedAuthoritiesConverter){
         super();
-        super.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);
+        if(jwtGrantedAuthoritiesConverter == null) {
+            super.setJwtGrantedAuthoritiesConverter(new SimpleJwtGrantedAuthoritiesConverter());
+        }else{
+            super.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);
+        }
     }
 
     

@@ -20,9 +20,15 @@ public class OAuth2ResourceServerUserinfoEndpoint {
 
     protected final Log logger = LogFactory.getLog(getClass());
 
-    private @Autowired(required = false) SimpleJwtAuthenticationMapper mapper;
 
-    private SimpleJwtAuthenticationMapper sample;
+    private SimpleJwtAuthenticationMapper mapper = new SimpleJwtAuthenticationMapper.Default();
+
+    public OAuth2ResourceServerUserinfoEndpoint(SimpleJwtAuthenticationMapper mapper){
+        if(mapper == null) return;
+        this.mapper = mapper;
+    }   
+
+
 
     @RequestMapping(value = "/oauth2/userinfo", method = { RequestMethod.GET })
     public @ResponseBody ResponseEntity<Object> oauth2UserInfo(HttpServletRequest request, Authentication authentication) {
@@ -39,15 +45,7 @@ public class OAuth2ResourceServerUserinfoEndpoint {
 
             JwtAuthenticationToken token = (JwtAuthenticationToken)authentication;
 
-            Map<String,Object> response = null;
-            if(mapper != null) {
-                response = mapper.map(token);
-            }else{
-                if(sample == null) {
-                    sample = new SimpleJwtAuthenticationMapper.Default();
-                }
-                response = sample.map(token);
-            }
+            Map<String,Object> response = mapper.map(token);
 
             logger.info("\t[/oauth2/userinfo]: Done.");
             return ResponseEntity.ok(response);
